@@ -1,7 +1,6 @@
-# a-blog cms Passkey プラグイン（提案用 PoC）
+# a-blog cms Passkey プラグイン
 
 a-blog cms の **管理画面ログインをパスキー（WebAuthn）でできるようにする**プラグイン。
-「本体機能として入れるならこんな感じ」というイメージを共有するための実装です。
 
 ## できること
 
@@ -12,9 +11,15 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 
 ## インストール
 
+リポジトリのディレクトリ構造を a-blog cms にそのまま重ねます。
+
 ```bash
-# プラグイン本体を a-blog cms の extension/plugins/ に配置
-cp -r Passkey/ /path/to/ablogcms/extension/plugins/
+# このリポジトリを clone（または zip をダウンロード）して
+git clone https://github.com/kazumich/passkey.git
+cd passkey
+
+# extension/plugins/Passkey/ をそのまま a-blog cms 側にコピー
+cp -r extension/plugins/Passkey /path/to/ablogcms/extension/plugins/
 
 # composer 依存（lbuchs/webauthn）はリポジトリに同梱済み
 # 必要なら再インストール
@@ -33,7 +38,7 @@ composer install --no-dev
 
 ## 詳細仕様
 
-[SPEC.md](./SPEC.md) を参照してください。アーキテクチャ、認証フロー（シーケンス図付き）、DB スキーマ、エンドポイント、セキュリティ、本体組み込み時の設計提案を記載しています。
+[extension/plugins/Passkey/SPEC.md](./extension/plugins/Passkey/SPEC.md) を参照してください。アーキテクチャ、認証フロー（シーケンス図付き）、DB スキーマ、エンドポイント、セキュリティ、本体組み込み時の設計提案を記載しています。
 
 ## ライセンス
 

@@ -1,7 +1,6 @@
-# a-blog cms パスキーログイン プラグイン（提案用 PoC）
+# a-blog cms パスキーログイン プラグイン
 
 a-blog cms の **管理画面ログインをパスキー（WebAuthn）でできるようにする**プラグイン。
-社内エンジニアに「本体機能として入れるならこんな感じ」というイメージを共有するための実装。
 
 - 配布形態: プラグイン（`extension/plugins/Passkey/`）
 - 依存: `lbuchs/webauthn ^2.2`（MIT、PHP 8.0+、依存なし）
@@ -266,7 +265,7 @@ POST は `ACMS_POST` 標準 CSRF（`formToken`）に乗る。JS は `window.csrf
 
 ## 7. プラグインの制約（＝本体に入れたい理由）
 
-PoC として動くものはできましたが、**本来 a-blog cms 本体に入っていれば綺麗に書ける部分**を、プラグインから外側で頑張った箇所がいくつかあります。
+プラグインとして動くものは作れていますが、**本来 a-blog cms 本体に入っていれば綺麗に書ける部分**を、プラグインから外側で頑張った箇所がいくつかあります。
 
 ### 7.1 `/login/` 画面への UI 注入
 - 標準 SNS は `themes/system/_member-admin/parts/login/sns.html` で `Touch_SnsAdminLogin` + `Member_Sns` モジュールが綺麗に組み込まれている
@@ -290,7 +289,7 @@ PoC として動くものはできましたが、**本来 a-blog cms 本体に�
 
 ### 7.5 設定 UI
 - 標準 SNS は `themes/system/admin/config/login.html` に snslogin の ON/OFF や対象権限のセレクトが組み込まれている
-- プラグインから同じ場所への inject ポイントがないため、現状 PoC では設定 UI 自体を持っていない（インストールしたら即 ON、`config.system.yaml` で上書き可能のみ）
+- プラグインから同じ場所への inject ポイントがないため、現状は設定 UI 自体を持っていない（インストールしたら即 ON、`config.system.yaml` で上書き可能のみ）
 - **本体組み込み案**：admin/config/login.html にも inject ポイント、または Passkey 用の専用設定セクション
 
 ### 7.6 再認証（Sudo mode）の枠
@@ -335,7 +334,7 @@ PR/Issue にする場合の骨子。プラグイン版コードを namespace 付
 9. **Sudo mode ユーティリティ**（`Services/Login/Helper.php`）追加
    - `requireRecentAuth(int $minutes)` でパスキー追加・パスワード変更などをガード
 
-10. **依存ライブラリ**は `lbuchs/webauthn` でも、より一般的な `web-auth/webauthn-lib` でも選べる。PoC では `lbuchs/webauthn` を選択（依存少・小ぶり）
+10. **依存ライブラリ**は `lbuchs/webauthn` でも、より一般的な `web-auth/webauthn-lib` でも選べる。このプラグインでは `lbuchs/webauthn` を選択（依存少・小ぶり）
 
 ---
 
