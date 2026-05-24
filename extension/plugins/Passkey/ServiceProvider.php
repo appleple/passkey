@@ -15,7 +15,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $version = '1.0.0';
+    public $version = '0.5.0';
 
     /**
      * @var string
@@ -25,7 +25,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $author = 'com.appleple';
+    public $author = 'com.kazumich';
 
     /**
      * @var bool
