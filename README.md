@@ -32,7 +32,8 @@ composer install --no-dev
 
 ## 動作要件
 
-- PHP 8.0 以上（ext-openssl, ext-mbstring 必須、ext-sodium 推奨）
+- a-blog cms 3.2.x
+- PHP 8.1 以上（ext-openssl, ext-mbstring 必須、ext-sodium 推奨）
 - HTTPS（WebAuthn API がブラウザで HTTP を拒否）
 - ブラウザは WebAuthn Level 2 対応（最新の Chrome / Safari / Edge / Firefox）
 
