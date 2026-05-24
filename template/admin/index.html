@@ -1,0 +1,71 @@
+<header>
+	<div>
+		@include("/admin/topicpath.html")
+	</div>
+	<div>
+		<h1 class="acms-admin-admin-title js-dialog-title">
+			<!--T--><span class="js-dialog-title">パスキー管理</span><!--/T-->
+		</h1>
+	</div>
+</header>
+
+<!-- BEGIN_MODULE Passkey_Lists -->
+<!-- BEGIN_IF [{passkey_count}/gt/0] -->
+
+<div class="acms-admin-float-none-sp acms-admin-position-right acms-admin-fix-right">
+  <form action="" method="post" class="acms-admin-float-right js-acms_fix_marker">
+    <input type="hidden" name="bid" value="%{BID}" />
+    <input type="hidden" name="admin" value="app_passkey_edit" />
+    <input type="submit" name="ACMS_POST_2GET" value="<!--T-->パスキーを作成<!--/T-->" class="acms-admin-btn acms-admin-btn-success" />
+  </form>
+</div>
+
+<hr class="clearHidden">
+
+<div class="acms-admin-table-scroll-xs acms-admin-table-scroll-sm acms-admin-table-scroll-md acms-admin-clear">
+<table class="acms-admin-table-admin acms-admin-table-hover">
+	<thead class="acms-admin-table-heading">
+		<tr>
+			<th class="acms-admin-table-nowrap"><!--T-->名前<!--/T--></th>
+			<th class="acms-admin-table-nowrap"><!--T-->認証器<!--/T--></th>
+			<th class="acms-admin-table-nowrap"><!--T-->登録日<!--/T--></th>
+			<th class="acms-admin-table-nowrap"><!--T-->最終使用<!--/T--></th>
+			<th class="acms-admin-table-nowrap">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN passkey:loop -->
+		<tr>
+			<td><strong>{passkey_nickname}</strong></td>
+			<td class="acms-admin-table-nowrap">
+				{passkey_aaguid_label} : {passkey_aaguid}
+			</td>
+			<td class="acms-admin-table-nowrap">{passkey_created_at}</td>
+			<td class="acms-admin-table-nowrap">{passkey_last_used_at}</td>
+			<td class="acms-admin-text-right">
+				<form action="" method="post" style="margin:0;">
+					<input type="hidden" name="passkey_id" value="{passkey_id}" />
+					<button type="submit" name="ACMS_POST_Passkey_Unregister" value="{passkey_id}" class="acms-admin-btn acms-admin-btn-danger" onclick="return confirm('このパスキーを削除します。よろしいですか？');"><!--T-->削除<!--/T--></button>
+				</form>
+			</td>
+		</tr>
+	<!-- END passkey:loop -->
+	</tbody>
+</table>
+</div>
+<!-- ELSE -->
+
+<div class="acms-admin-announce">
+  <h2 class="acms-admin-announce-title"><span class="acms-admin-icon acms-admin-icon-news"></span><!--T-->パスキーの登録がありません。<!--/T--></h2>
+  <p class="acms-admin-announce-text"><!--T-->生体認証や PIN、セキュリティキーでパスワードレスログインができます。<!--/T--></p>
+  <div class="acms-admin-announce-action">
+    <form action="" method="post">
+      <input type="hidden" name="bid" value="%{BID}" />
+      <input type="hidden" name="admin" value="app_passkey_edit" />
+      <input type="submit" name="ACMS_POST_2GET" value="<!--T-->パスキーを作成<!--/T-->" class="acms-admin-btn acms-admin-btn-success" />
+    </form>
+  </div>
+</div>
+
+<!-- END_IF -->
+<!-- END_MODULE Passkey_Lists -->

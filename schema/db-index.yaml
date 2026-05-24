@@ -1,0 +1,4 @@
+%{PREFIX}passkey:
+  - PRIMARY KEY (passkey_id)
+  - UNIQUE KEY passkey_credential_id_unique (passkey_credential_id)
+  - KEY passkey_user_id_index (passkey_user_id)

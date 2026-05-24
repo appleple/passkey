@@ -1,0 +1,241 @@
+<?php
+
+namespace Acms\Plugins\Passkey;
+
+use App;
+use DB;
+use ACMS_App;
+use Acms\Services\Facades\Storage;
+use Acms\Services\Facades\Config;
+use Acms\Services\Common\InjectTemplate;
+use Acms\Services\Common\HookFactory;
+
+class ServiceProvider extends ACMS_App
+{
+    /**
+     * @var string
+     */
+    public $version = '1.0.0';
+
+    /**
+     * @var string
+     */
+    public $name = 'Passkey';
+
+    /**
+     * @var string
+     */
+    public $author = 'com.appleple';
+
+    /**
+     * @var bool
+     */
+    public $module = false;
+
+    /**
+     * @var bool|string メニュー識別子。サイドバーから /admin/app_passkey_index/ に遷移
+     */
+    public $menu = 'passkey_index';
+
+    /**
+     * @var string
+     */
+    public $desc = 'パスキー（WebAuthn）での管理ログイン機能と、自分のパスキー管理画面を提供します。';
+
+    /**
+     * @var array
+     */
+    protected $installTable = [
+        'passkey',
+    ];
+
+    /**
+     * サービスの初期処理
+     */
+    public function init()
+    {
+        require_once dirname(__FILE__) . '/vendor/autoload.php';
+
+        // 管理ログイン (/login/) のレスポンスにパスキーボタンを差し込む Hook
+        HookFactory::singleton()->attach('PasskeyHook', new Hook());
+
+        // 管理画面 2 画面構成：
+        //   /admin/app_passkey_index/ → 一覧
+        //   /admin/app_passkey_edit/  → 追加フォーム
+        if (defined('ADMIN')) {
+            $inject = InjectTemplate::singleton();
+            $base = PLUGIN_DIR . $this->name . '/template/admin/';
+            if (ADMIN === 'app_passkey_index') {
+                $inject->add('admin-topicpath', $base . 'topicpath.html');
+                $inject->add('admin-main', $base . 'index.html');
+            } elseif (ADMIN === 'app_passkey_edit') {
+                $inject->add('admin-topicpath', $base . 'topicpath.html');
+                $inject->add('admin-main', $base . 'edit.html');
+            }
+        }
+
+        App::singleton('passkey.engine', function () {
+            $rpName = config('passkey_rp_name');
+            if (empty($rpName)) {
+                $rpName = config('site_name');
+            }
+            if (empty($rpName)) {
+                $rpName = 'a-blog cms';
+            }
+            $rpId = config('passkey_rp_id');
+            if (empty($rpId)) {
+                $rpId = isset($_SERVER['HTTP_HOST']) ? preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST']) : 'localhost';
+                // 本番運用では rpId は明示設定を推奨（プロキシ越し / 複数ドメインで Host ヘッダ依存は事故りやすい）
+                if (class_exists('AcmsLogger')) {
+                    \AcmsLogger::notice('passkey_rp_id が未設定のため HTTP_HOST から自動決定しました。本番運用では config.system.yaml で明示設定を推奨します。', [
+                        'rpId' => $rpId,
+                    ]);
+                }
+            }
+            $userVerification = config('passkey_user_verification');
+            if (!in_array($userVerification, ['required', 'preferred', 'discouraged'], true)) {
+                $userVerification = 'preferred';
+            }
+            return new Engine($rpName, $rpId, $userVerification);
+        });
+    }
+
+    /**
+     * インストールする前の環境チェック処理
+     *
+     * @return bool
+     */
+    public function checkRequirements()
+    {
+        return true;
+    }
+
+    /**
+     * インストールするときの処理
+     * データベーステーブルの初期化
+     *
+     * @return void
+     */
+    public function install()
+    {
+        $yamlTable = preg_replace(
+            '/%{PREFIX}/',
+            DB_PREFIX,
+            Storage::get(dirname(__FILE__) . '/schema/db-schema.yaml')
+        );
+        $tablesData = Config::yamlParse($yamlTable);
+        if (!is_array($tablesData)) {
+            $tablesData = [];
+        }
+        if (!empty($tablesData[0])) {
+            unset($tablesData[0]);
+        }
+        $tableList = array_merge(array_diff(array_keys($tablesData), ['']));
+
+        $yamlIndex = preg_replace(
+            '/%{PREFIX}/',
+            DB_PREFIX,
+            Storage::get(dirname(__FILE__) . '/schema/db-index.yaml')
+        );
+        $indexData = Config::yamlParse($yamlIndex);
+        if (!is_array($indexData)) {
+            $indexData = [];
+        }
+        if (!empty($indexData[0])) {
+            unset($indexData[0]);
+        }
+        foreach ($tableList as $tb) {
+            $index = isset($indexData[$tb]) ? $indexData[$tb] : null;
+            $this->dbCreateTables($tb, $tablesData[$tb], $index);
+        }
+    }
+
+    /**
+     * アンインストールするときの処理
+     *
+     * @return void
+     */
+    public function uninstall()
+    {
+        $this->dbDropTables([
+            'passkey',
+        ]);
+    }
+
+    /**
+     * アップデートするときの処理
+     *
+     * @return bool
+     */
+    public function update()
+    {
+        return true;
+    }
+
+    /**
+     * 有効化するときの処理
+     *
+     * @return bool
+     */
+    public function activate()
+    {
+        return true;
+    }
+
+    /**
+     * 無効化するときの処理
+     *
+     * @return bool
+     */
+    public function deactivate()
+    {
+        return true;
+    }
+
+    /**
+     * DB テーブルの削除
+     *
+     * @param array $tbs
+     * @return void
+     */
+    protected function dbDropTables($tbs)
+    {
+        $DB = DB::singleton(dsn());
+        foreach ($tbs as $tb) {
+            if (dbTableExists($tb)) {
+                $q = 'DROP TABLE ' . DB_PREFIX . $tb;
+                $DB->query($q, 'exec');
+            }
+        }
+    }
+
+    /**
+     * DB テーブルの作成
+     *
+     * @param string $tb
+     * @param array $data
+     * @param array|null $idx
+     * @return void
+     */
+    protected function dbCreateTables($tb, $data, $idx = null)
+    {
+        $DB = DB::singleton(dsn());
+
+        $q = "CREATE TABLE $tb (\r\n";
+        foreach ($data as $row) {
+            $row['Null'] = (isset($row['Null']) && $row['Null'] === 'NO') ? 'NOT NULL' : 'NULL';
+            $row['Default'] = !empty($row['Default']) ? "default '" . $row['Default'] . "'" : null;
+            $extra = !empty($row['Extra']) ? $row['Extra'] : '';
+            $q .= $row['Field'] . ' ' . $row['Type'] . ' ' . $row['Null'] . ' ' . $row['Default'] . ' ' . $extra . ",\r\n";
+        }
+        if (is_array($idx) && !empty($idx)) {
+            foreach ($idx as $key) {
+                $q .= $key . ",\r\n";
+            }
+        }
+        $q = preg_replace('@,(\r\n)$@', '$1', $q);
+        $q .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;';
+
+        $DB->query($q, 'exec');
+    }
+}

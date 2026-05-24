@@ -1,0 +1,17 @@
+{
+  "name": "appleple/passkey",
+  "description": "パスキー（WebAuthn）ログイン機能を提供します。",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.0",
+    "ext-openssl": "*",
+    "ext-mbstring": "*",
+    "lbuchs/webauthn": "^2.2"
+  },
+  "config": {
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}

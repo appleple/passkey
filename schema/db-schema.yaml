@@ -1,0 +1,72 @@
+---
+%{PREFIX}passkey:
+  passkey_id:
+    Field: passkey_id
+    Type: int(11) unsigned
+    'Null': NO
+    Key: PRI
+    Default:
+    Extra: auto_increment
+  passkey_user_id:
+    Field: passkey_user_id
+    Type: int(11)
+    'Null': NO
+    Key:
+    Default:
+    Extra:
+  passkey_credential_id:
+    Field: passkey_credential_id
+    Type: varchar(512)
+    'Null': NO
+    Key:
+    Default:
+    Extra:
+  passkey_public_key:
+    Field: passkey_public_key
+    Type: TEXT
+    'Null': NO
+    Key:
+    Default:
+    Extra:
+  passkey_sign_count:
+    Field: passkey_sign_count
+    Type: int(11) unsigned
+    'Null': NO
+    Key:
+    Default: '0'
+    Extra:
+  passkey_aaguid:
+    Field: passkey_aaguid
+    Type: varchar(36)
+    'Null': YES
+    Key:
+    Default:
+    Extra:
+  passkey_transports:
+    Field: passkey_transports
+    Type: varchar(255)
+    'Null': YES
+    Key:
+    Default:
+    Extra:
+  passkey_nickname:
+    Field: passkey_nickname
+    Type: varchar(255)
+    'Null': YES
+    Key:
+    Default:
+    Extra:
+  passkey_last_used_at:
+    Field: passkey_last_used_at
+    Type: datetime
+    'Null': YES
+    Key:
+    Default:
+    Extra:
+  passkey_created_at:
+    Field: passkey_created_at
+    Type: datetime
+    'Null': NO
+    Key:
+    Default:
+    Extra:
