@@ -276,6 +276,9 @@ class Engine
      * ユーザが管理ログイン経路を使える資格を持つかチェックする。
      * 標準 ACMS_POST_Member_Admin_Login と同等のガード。
      *
+     * 古いバージョンの a-blog cms には一部メソッドが無いため、Facade が
+     * BadMethodCallException を投げた場合はそのチェックだけスキップする。
+     *
      * @param array<string,mixed> $user user テーブルの 1 行
      * @return string[] エラー理由（空配列なら通過）
      */
@@ -283,20 +286,42 @@ class Engine
     {
         $errors = [];
         $auth = isset($user['user_auth']) ? (string)$user['user_auth'] : '';
-        if (!in_array($auth, Login::getAdminLoginAuth(), true)) {
+
+        // 権限チェック：getAdminLoginAuth が無い旧バージョンは固定リストでフォールバック
+        try {
+            $allowedAuths = Login::getAdminLoginAuth();
+        } catch (\Throwable $e) {
+            $allowedAuths = ['administrator', 'editor', 'contributor'];
+        }
+        if (!in_array($auth, $allowedAuths, true)) {
             $errors[] = '管理ログインの権限がありません';
         }
+
+        // ブログ所属チェック
         $loginAnywhere = isset($user['user_login_anywhere']) ? (string)$user['user_login_anywhere'] : '';
         $userBid = isset($user['user_blog_id']) ? intval($user['user_blog_id']) : 0;
         if ($loginAnywhere !== 'on' && $userBid !== intval(BID)) {
             $errors[] = '別のブログに所属するユーザーです';
         }
-        if (!Login::canAccessAdminLoginFromCurrentIp()) {
-            $errors[] = 'このIPアドレスからのログインは許可されていません';
+
+        // IP 制限：旧バージョンに無ければスキップ
+        try {
+            if (!Login::canAccessAdminLoginFromCurrentIp()) {
+                $errors[] = 'このIPアドレスからのログインは許可されていません';
+            }
+        } catch (\Throwable $e) {
+            // 旧バージョンの a-blog cms はこのメソッドを持たない → IP 制限はスキップ
         }
-        if (!Login::checkAllowedDevice($user)) {
-            $errors[] = '許可されていない端末です';
+
+        // 端末制限：旧バージョンに無ければスキップ
+        try {
+            if (!Login::checkAllowedDevice($user)) {
+                $errors[] = '許可されていない端末です';
+            }
+        } catch (\Throwable $e) {
+            // 旧バージョンの a-blog cms はこのメソッドを持たない → 端末制限はスキップ
         }
+
         return $errors;
     }
 
