@@ -112,41 +112,55 @@ class ServiceProvider extends ACMS_App
 
     /**
      * インストールするときの処理
-     * データベーステーブルの初期化
+     * データベーステーブルの初期化。
+     *
+     * 標準の ACMS_POST_App_Install は catch(Exception) しかせず PHP の \Error 系を
+     * 取りこぼすため、ここで \Throwable を一度受けて監査ログに詳細を残してから
+     * Exception 系で再 throw する。
      *
      * @return void
      */
     public function install()
     {
-        $yamlTable = preg_replace(
-            '/%{PREFIX}/',
-            DB_PREFIX,
-            Storage::get(dirname(__FILE__) . '/schema/db-schema.yaml')
-        );
-        $tablesData = Config::yamlParse($yamlTable);
-        if (!is_array($tablesData)) {
-            $tablesData = [];
-        }
-        if (!empty($tablesData[0])) {
-            unset($tablesData[0]);
-        }
-        $tableList = array_merge(array_diff(array_keys($tablesData), ['']));
+        try {
+            $yamlTable = preg_replace(
+                '/%{PREFIX}/',
+                DB_PREFIX,
+                Storage::get(dirname(__FILE__) . '/schema/db-schema.yaml')
+            );
+            $tablesData = Config::yamlParse($yamlTable);
+            if (!is_array($tablesData)) {
+                $tablesData = [];
+            }
+            if (!empty($tablesData[0])) {
+                unset($tablesData[0]);
+            }
+            $tableList = array_merge(array_diff(array_keys($tablesData), ['']));
 
-        $yamlIndex = preg_replace(
-            '/%{PREFIX}/',
-            DB_PREFIX,
-            Storage::get(dirname(__FILE__) . '/schema/db-index.yaml')
-        );
-        $indexData = Config::yamlParse($yamlIndex);
-        if (!is_array($indexData)) {
-            $indexData = [];
-        }
-        if (!empty($indexData[0])) {
-            unset($indexData[0]);
-        }
-        foreach ($tableList as $tb) {
-            $index = isset($indexData[$tb]) ? $indexData[$tb] : null;
-            $this->dbCreateTables($tb, $tablesData[$tb], $index);
+            $yamlIndex = preg_replace(
+                '/%{PREFIX}/',
+                DB_PREFIX,
+                Storage::get(dirname(__FILE__) . '/schema/db-index.yaml')
+            );
+            $indexData = Config::yamlParse($yamlIndex);
+            if (!is_array($indexData)) {
+                $indexData = [];
+            }
+            if (!empty($indexData[0])) {
+                unset($indexData[0]);
+            }
+            foreach ($tableList as $tb) {
+                $index = isset($indexData[$tb]) ? $indexData[$tb] : null;
+                $this->dbCreateTables($tb, $tablesData[$tb], $index);
+            }
+        } catch (\Throwable $e) {
+            $this->logInstallFailure('install', $e);
+            // 上位の catch(Exception) にも乗せる（\Error 系も Exception でラップ）
+            throw new \RuntimeException(
+                'Passkey プラグインのインストールに失敗しました: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
@@ -157,9 +171,18 @@ class ServiceProvider extends ACMS_App
      */
     public function uninstall()
     {
-        $this->dbDropTables([
-            'passkey',
-        ]);
+        try {
+            $this->dbDropTables([
+                'passkey',
+            ]);
+        } catch (\Throwable $e) {
+            $this->logInstallFailure('uninstall', $e);
+            throw new \RuntimeException(
+                'Passkey プラグインのアンインストールに失敗しました: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     /**
@@ -237,5 +260,35 @@ class ServiceProvider extends ACMS_App
         $q .= ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;';
 
         $DB->query($q, 'exec');
+    }
+
+    /**
+     * インストール／アンインストール失敗時の詳細を監査ログに残す。
+     *
+     * 標準の ACMS_POST_App_Install / Uninstall は catch(Exception) しかせず PHP の
+     * \Error 系（型エラー、メモリ不足、ファイル未読み込み等）を取りこぼすため、
+     * ここで一度 \Throwable を受けて AcmsLogger に詳細を吐く。
+     *
+     * @param string $phase 'install' | 'uninstall'
+     * @param \Throwable $e
+     * @return void
+     */
+    protected function logInstallFailure(string $phase, \Throwable $e): void
+    {
+        if (!class_exists('AcmsLogger')) {
+            return;
+        }
+        \AcmsLogger::error(
+            'Passkey プラグインの ' . $phase . ' に失敗しました',
+            [
+                'class' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'php_version' => PHP_VERSION,
+                'db_prefix' => defined('DB_PREFIX') ? DB_PREFIX : '?',
+            ]
+        );
     }
 }
