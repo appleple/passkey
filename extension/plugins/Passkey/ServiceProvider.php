@@ -5,7 +5,6 @@ namespace Acms\Plugins\Passkey;
 use App;
 use DB;
 use ACMS_App;
-use Acms\Services\Facades\Storage;
 use Acms\Services\Facades\Config;
 use Acms\Services\Common\InjectTemplate;
 use Acms\Services\Common\HookFactory;
@@ -123,10 +122,13 @@ class ServiceProvider extends ACMS_App
     public function install()
     {
         try {
+            // schema YAML は file_get_contents で直接読む（Storage::get() は
+            // ディレクトリトラバーサル防止で public_html/ 配下しか読まないため、
+            // git/ などへの symlink 構成だと realpath が安全領域外と判定されて失敗する）
             $yamlTable = preg_replace(
                 '/%{PREFIX}/',
                 DB_PREFIX,
-                Storage::get(dirname(__FILE__) . '/schema/db-schema.yaml')
+                (string)@file_get_contents(dirname(__FILE__) . '/schema/db-schema.yaml')
             );
             $tablesData = Config::yamlParse($yamlTable);
             if (!is_array($tablesData)) {
@@ -140,7 +142,7 @@ class ServiceProvider extends ACMS_App
             $yamlIndex = preg_replace(
                 '/%{PREFIX}/',
                 DB_PREFIX,
-                Storage::get(dirname(__FILE__) . '/schema/db-index.yaml')
+                (string)@file_get_contents(dirname(__FILE__) . '/schema/db-index.yaml')
             );
             $indexData = Config::yamlParse($yamlIndex);
             if (!is_array($indexData)) {
