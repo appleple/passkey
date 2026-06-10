@@ -15,7 +15,7 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 
 ```bash
 # このリポジトリを clone（または zip をダウンロード）して
-git clone https://github.com/kazumich/passkey.git
+git clone https://github.com/appleple/passkey.git
 cd passkey
 
 # extension/plugins/Passkey/ をそのまま a-blog cms 側にコピー
