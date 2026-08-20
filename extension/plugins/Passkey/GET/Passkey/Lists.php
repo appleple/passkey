@@ -42,14 +42,16 @@ class Lists extends ACMS_GET
         foreach ($rows as $row) {
             $aaguid = $row['passkey_aaguid'] ?: '';
             $label = Engine::aaguidLabel($aaguid);
-            $tpl->add('passkey:loop', [
-                'passkey_id' => $row['passkey_id'],
-                'passkey_nickname' => $row['passkey_nickname'] ?: 'パスキー #' . $row['passkey_id'],
-                'passkey_created_at' => $row['passkey_created_at'],
-                'passkey_last_used_at' => $row['passkey_last_used_at'] ?: '—',
-                'passkey_aaguid' => $aaguid,
-                'passkey_aaguid_label' => $label ?: '不明',
-            ]);
+            $tpl->add('passkey:loop', array_merge(
+                [
+                    'passkey_id' => $row['passkey_id'],
+                    'passkey_nickname' => $row['passkey_nickname'] ?: 'パスキー #' . $row['passkey_id'],
+                    'passkey_aaguid' => $aaguid,
+                    'passkey_aaguid_label' => $label ?: '不明',
+                ],
+                Engine::datetimeVars('passkey_created', $row['passkey_created_at']),
+                Engine::datetimeVars('passkey_last_used', $row['passkey_last_used_at'])
+            ));
         }
         $tpl->add(null, [
             'passkey_count' => count($rows),

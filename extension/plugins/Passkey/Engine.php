@@ -360,6 +360,68 @@ class Engine
     }
 
     /**
+     * 日時を「日付」「時刻」に分割したテンプレ変数を作る（テーブルの幅節約の2段表示用）
+     *
+     * @param string $prefix 変数名の接頭辞（例: 'passkey_created'）
+     * @param string|null $datetime 'Y-m-d H:i:s'
+     * @return array<string,string> {prefix}_at / {prefix}_date / {prefix}_time
+     */
+    public static function datetimeVars(string $prefix, ?string $datetime): array
+    {
+        $ts = $datetime ? strtotime($datetime) : false;
+        if ($ts === false) {
+            return [
+                $prefix . '_at' => '—',
+                $prefix . '_date' => '—',
+                $prefix . '_time' => '',
+            ];
+        }
+        return [
+            $prefix . '_at' => date('Y-m-d H:i:s', $ts),
+            $prefix . '_date' => date('Y/m/d', $ts),
+            $prefix . '_time' => date('H:i', $ts),
+        ];
+    }
+
+    /**
+     * 全ユーザーの登録済みパスキー一覧（管理者の台帳用）
+     * ユーザー情報（名前・コード・権限）を JOIN して返す
+     *
+     * @return array<array<string,mixed>>
+     */
+    public function listAll(): array
+    {
+        $sql = SQL::newSelect('passkey');
+        $sql->addLeftJoin('user', 'user_id', 'passkey_user_id');
+        $sql->setOrder('passkey_created_at', 'DESC');
+        $rows = DB::query($sql->get(dsn()), 'all');
+        if (!is_array($rows)) {
+            return [];
+        }
+        return $rows;
+    }
+
+    /**
+     * パスキー削除（所有者チェックなし。管理者操作用 — 呼び出し側で権限を確認すること）
+     *
+     * @param int $passkeyId
+     * @return array<string,mixed>|null 削除した行（監査ログ用）。見つからなければ null
+     */
+    public function deleteById(int $passkeyId): ?array
+    {
+        $sql = SQL::newSelect('passkey');
+        $sql->addWhereOpr('passkey_id', $passkeyId);
+        $row = DB::query($sql->get(dsn()), 'row');
+        if (empty($row)) {
+            return null;
+        }
+        $sql = SQL::newDelete('passkey');
+        $sql->addWhereOpr('passkey_id', $passkeyId);
+        DB::query($sql->get(dsn()), 'exec');
+        return $row;
+    }
+
+    /**
      * パスキー削除（本人のみ）
      *
      * @param int $passkeyId

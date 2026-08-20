@@ -17,9 +17,16 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 - 認証成功で `generateSession($uid)` が走り、標準ログインと同じセッションが張られる
 
 ### B. 管理画面のサイドバー「拡張メニュー > Passkey」
-- `/bid/X/admin/app_passkey_index/` — 自分が登録済みのパスキー一覧（認証器名 / 登録日 / 最終使用 / 削除）
-- `/bid/X/admin/app_passkey_edit/` — パスキー追加フォーム
+- `/bid/X/admin/app_passkey_index/` — **全ユーザーのパスキー台帳**（ユーザー / 権限 / 認証器名 / 登録日 / 最終使用 / 削除）。`app_*` ページは本体仕様で管理者専用のため、管理者向けの監査・失効（退職・端末紛失）用途
+- `/bid/X/admin/app_passkey_edit/` — パスキー追加フォーム（自分の分）
 - 一覧／追加の 2 画面構成は、標準の `user/index` `user/edit` などと同じ作法
+
+### B2. ユーザー管理ページからの自分のパスキー管理（v0.6.0 テーマ拡張 → v0.7.0 自動注入）
+- `/bid/X/uid/Y/admin/user_passkey/` — 自分のパスキー一覧＋追加＋削除（1 ページ完結）
+- **v0.7.0 からテーマ改修不要**。2 つの注入で実現：
+  - ページ本体： `_layouts/admin.html` の inject ポイント `admin-main` / `admin-topicpath` に、`ADMIN === 'user_passkey'` のとき `template/admin/user.html` / `topicpath.html` を注入（ServiceProvider）。テーマが `admin/user/passkey.html` を持つ場合は callable 内の判定でテーマ側を優先（`themeProvidesUserPasskeyTemplate()`。テーマ名の `@` 継承チェーンを遡って is_file 判定）
+  - 設定ボタン： `Hook::afterBuild()` で `ADMIN === 'user_edit'` のレスポンス HTML に「パスキー：設定する」行を文字列挿入。アンカーは `admin/user_tfa/`（２段階認証行）→ 無ければ `name="retype_pass"`。レスポンスに `admin/user_passkey/` が既に含まれる場合（テーマで設置済み）はスキップ。新規作成画面（UID 空）もスキップ
+- `app_*` と違い管理者以外（編集者・投稿者）もアクセスできる。GET/POST モジュールが SUID ベースなので、誰が開いても自分のパスキーしか操作できない。他人の uid で開くと案内のみ表示（テンプレ側 `BEGIN_IF [%{UID}/eq/%{SUID}]`）
 - **認証器名表示**：AAGUID から「Apple iCloud Keychain」「Windows Hello」「Google Password Manager」「YubiKey 5 Series」等を解決して表示（辞書は Engine::aaguidLabel() に内蔵）
 - **デフォルト名プリフィル**：登録時、User-Agent から推測して名前欄に初期値を入れる（Apple → `My Apple devices`、Windows → `Windows Hello`、Android → `Android` 等）
 
@@ -224,8 +231,9 @@ POST は `ACMS_POST` 標準 CSRF（`formToken`）に乗る。JS は `window.csrf
 
 | URL | テンプレ |
 |---|---|
-| `/admin/app_passkey_index/` | `template/admin/index.html` |
+| `/admin/app_passkey_index/` | `template/admin/index.html`（Passkey_AdminLists / 管理者専用の全ユーザー台帳） |
 | `/admin/app_passkey_edit/` | `template/admin/edit.html` |
+| `/uid/Y/admin/user_passkey/` | テーマの `admin/user/passkey.html`（`theme-dist/` から配布。Passkey_Lists / 本人のみ） |
 
 ---
 
