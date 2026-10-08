@@ -9,47 +9,27 @@
 	</div>
 </header>
 
-<p><!--T-->サイトに登録されている全ユーザーのパスキー一覧です。退職や端末紛失などで無効化が必要な場合はここから削除できます。自分のパスキーの登録は「パスキーを作成」から行います。<!--/T--></p>
+<div role="alert" class="acms-admin-alert acms-admin-alert-warning acms-admin-alert-icon">
+	<span class="acms-admin-icon acms-admin-icon-attention acms-admin-alert-icon-before" aria-hidden="true"></span>
+	<!--T-->このプラグインは、Ver. 3.3.0 で本体機能として公式提供を予定している機能のプレビュー版です。本体機能との互換性はないため、3.3.0 へのアップデート後はパスキーの再登録が必要になります。本プラグインの配布およびメンテナンスは、3.3.0 のリリース後に終了を予定しています。<!--/T-->
+</div>
+
+<p><!--T-->サイトに登録されている全ユーザーのパスキー一覧です。退職や端末紛失などで無効化が必要な場合はここから削除できます。<!--/T--></p>
 
 <div class="acms-admin-float-none-sp acms-admin-position-right acms-admin-fix-right">
-  <form action="" method="post" class="acms-admin-float-right js-acms_fix_marker">
-    <input type="hidden" name="bid" value="%{BID}" />
-    <input type="hidden" name="admin" value="app_passkey_edit" />
-    <input type="submit" name="ACMS_POST_2GET" value="<!--T-->パスキーを作成<!--/T-->" class="acms-admin-btn acms-admin-btn-success" />
-  </form>
+  <div class="acms-admin-float-right js-acms_fix_marker">
+    <form action="" method="post" style="display: inline;">
+      <input type="hidden" name="bid" value="%{BID}" />
+      <input type="hidden" name="admin" value="app_passkey_edit" />
+      <input type="submit" name="ACMS_POST_2GET" value="<!--T-->パスキーを作成<!--/T-->" class="acms-admin-btn acms-admin-btn-success" />
+    </form>
+    <a href="%{HTTP_ROOT}bid/%{BID}/admin/app_passkey_setting/" class="acms-admin-btn"><!--T-->設定<!--/T--></a>
+  </div>
 </div>
 
 <hr class="clearHidden">
 
 <!-- BEGIN_MODULE Passkey_AdminLists -->
-
-<form action="" method="post" class="acms-admin-margin-bottom-medium">
-	<table class="acms-admin-table-admin-edit">
-		<tr>
-			<th class="acms-admin-table-nowrap">
-				<!--T-->設定推奨モーダル<!--/T-->
-				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->パスキー未登録のユーザーが管理画面にログインしたとき、設定をすすめるモーダルを表示します。<!--/T-->"></i>
-			</th>
-			<td>
-				<div class="acms-admin-form-radio">
-					<label><input type="radio" name="passkey_login_prompt" value="on"{login_prompt_on_checked}[raw] /><i class="acms-admin-ico-radio"></i> <!--T-->表示する<!--/T--></label>
-				</div>
-				<div class="acms-admin-form-radio">
-					<label><input type="radio" name="passkey_login_prompt" value="off"{login_prompt_off_checked}[raw] /><i class="acms-admin-ico-radio"></i> <!--T-->表示しない<!--/T--></label>
-				</div>
-				<input type="hidden" name="config[]" value="passkey_login_prompt" />
-			</td>
-		</tr>
-		<tr>
-			<th class="acms-admin-table-nowrap"><!--T-->「あとで」の非表示期間<!--/T--></th>
-			<td>
-				<input type="number" name="passkey_login_prompt_suppress_days" value="{login_prompt_suppress_days}" min="1" max="365" class="acms-admin-form-width-mini" /> <!--T-->日間<!--/T-->
-				<input type="hidden" name="config[]" value="passkey_login_prompt_suppress_days" />
-			</td>
-		</tr>
-	</table>
-	<input type="submit" name="ACMS_POST_Config" value="<!--T-->保存<!--/T-->" class="acms-admin-btn acms-admin-btn-save" />
-</form>
 
 <!-- BEGIN_IF [{passkey_count}/gt/0] -->
 

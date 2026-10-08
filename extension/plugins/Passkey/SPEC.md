@@ -19,7 +19,10 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 ### B. 管理画面のサイドバー「拡張メニュー > Passkey」
 - `/bid/X/admin/app_passkey_index/` — **全ユーザーのパスキー台帳**（ユーザー / 権限 / 認証器名 / 登録日 / 最終使用 / 削除）。`app_*` ページは本体仕様で管理者専用のため、管理者向けの監査・失効（退職・端末紛失）用途
 - `/bid/X/admin/app_passkey_edit/` — パスキー追加フォーム（自分の分）
-- 一覧／追加の 2 画面構成は、標準の `user/index` `user/edit` などと同じ作法
+- `/bid/X/admin/app_passkey_setting/` — プラグイン設定（v0.9.0〜）。台帳の「設定」ボタンから遷移。保存は本体標準の `ACMS_POST_Config`、UI は本体の設定画面（`admin/config/function.html`）に合わせた固定保存バー（一覧リンク＋保存ボタン）
+  - 権限ガードは本体任せ：`Config::setValide()` → `isOperable()` が `config_edit` ロール / `sessionWithAdministration()` を検査し、不可なら `isValidAll()` が false になり保存されない
+  - 値の供給は GET `Passkey_AdminSetting`。ON/OFF は本体の作法どおり `hidden(off)` ＋ `checkbox(on)` ＋ `{key:checked#on}` で、未チェック時も必ず値が送られる
+- 一覧／追加／設定の構成は、標準の `user/index` `user/edit` などと同じ作法
 
 ### B2. ユーザー管理ページからの自分のパスキー管理（v0.6.0 テーマ拡張 → v0.7.0 自動注入）
 - `/bid/X/uid/Y/admin/user_passkey/` — 自分のパスキー一覧＋追加＋削除（1 ページ完結）
@@ -36,7 +39,7 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 - **管理画面に限定しない**：`login_auto_redirect` が on（デフォルト）だとログイン直後はフロントページに戻されるため。フロントでも崩れないようモーダルの装飾はインラインスタイルで自己完結させている
 - 表示はログイン 1 回につき 1 回だけ：`Hook::beforePostFire()` が管理ログイン（`ACMS_POST_Member_Admin_Login`、派生クラス含む）を検知して一時 Cookie（`acms_passkey_prompt_pending`、1時間・httponly・SameSite=Lax）を立て、ログイン後最初の管理画面表示で消費する
 - 「あとで」・ESC・オーバーレイクリックで閉じると localStorage（キーに SUID を含む）で `passkey_login_prompt_suppress_days` 日間（デフォルト 30）非表示
-- 管理者設定：台帳ページ（app_passkey_index）上部のフォームから標準の `ACMS_POST_Config` で保存（`config_edit` 権限ゲートは本体側）。ON/OFF は未チェック時の空値問題を避けるためラジオボタン
+- 管理者設定：**設定画面（app_passkey_setting）**から標準の `ACMS_POST_Config` で保存。v0.8.0 では台帳ページに同居させていたが、一覧と設定が混在して分かりにくいため v0.9.0 で分離した
 
 ### B4. 対象ユーザーの範囲（読者 / フロント会員は対象外）
 

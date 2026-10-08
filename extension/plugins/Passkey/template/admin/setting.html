@@ -1,0 +1,63 @@
+<header>
+	<div>
+		@include("/admin/topicpath.html")
+	</div>
+	<div>
+		<h1 class="acms-admin-admin-title js-dialog-title">
+			<!--T--><span class="js-dialog-title">パスキー設定</span><!--/T-->
+		</h1>
+	</div>
+</header>
+
+<!-- BEGIN_MODULE Admin_Config -->
+
+<!-- BEGIN_IF [{notice_mess}/nem/] -->
+<div role="alert" class="acms-admin-alert acms-admin-alert-icon acms-admin-alert-info">
+	<span class="acms-admin-icon acms-admin-icon-news acms-admin-alert-icon-before" aria-hidden="true"></span>
+	<button type="button" class="js-acms-alert-close acms-admin-alert-icon-after" aria-label="アラートを閉じる">×</button>
+	<!--T-->パスキー設定を保存しました<!--/T-->
+</div>
+<!-- END_IF -->
+
+<form action="" method="post" class="js-adminSave acms-admin-form">
+	<div class="js-acms_fix_marker acms_fix_bg">
+		<div class="acms-admin-form-group acms_fix_bg_index">
+			<a href="%{HTTP_ROOT}bid/%{BID}/admin/app_passkey_index/" class="acms-admin-btn-admin"><!--T-->一覧<!--/T--></a>
+			<input type="submit" name="ACMS_POST_Config" value="<!--T-->保存<!--/T-->" class="acms-admin-btn-admin acms-admin-btn-admin-primary acms-admin-btn-admin-save js-saving-splash" />
+		</div>
+	</div>
+
+	<h3 class="acms-admin-admin-title2"><!--T-->設定をすすめるモーダル<!--/T--></h3>
+	<table class="adminTable acms-admin-table-admin-edit">
+		<tr>
+			<th>
+				<!--T-->モーダルの表示<!--/T-->
+				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->パスキーを登録していないユーザーがログインしたとき、直後の画面で設定をすすめるモーダルを表示します。登録済みのユーザーには表示されません。<!--/T-->"></i>
+			</th>
+			<td>
+				<input type="hidden" name="passkey_login_prompt" value="off" />
+				<div class="acms-admin-form-checkbox">
+					<input type="checkbox" name="passkey_login_prompt" value="on"{passkey_login_prompt:checked#on} id="input-checkbox-passkey-login-prompt" />
+					<label for="input-checkbox-passkey-login-prompt">
+						<i class="acms-admin-ico-checkbox"></i>
+						<!--T-->パスキー未登録のユーザーに設定をすすめるモーダルを表示する<!--/T-->
+					</label>
+				</div>
+				<input type="hidden" name="config[]" value="passkey_login_prompt" />
+			</td>
+		</tr>
+		<tr>
+			<th>
+				<!--T-->「あとで」の非表示期間<!--/T-->
+				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->モーダルを「あとで」で閉じたあと、再び表示するまでの日数です。記録はブラウザごとに保存されます。未入力や 0 以下の場合は 30 日として扱われます。<!--/T-->"></i>
+			</th>
+			<td>
+				<input type="number" name="passkey_login_prompt_suppress_days" value="{passkey_login_prompt_suppress_days}" min="1" max="365" class="acms-admin-form-width-mini" id="input-text-passkey-suppress-days" />
+				<label for="input-text-passkey-suppress-days"><!--T-->日間<!--/T--></label>
+				<input type="hidden" name="config[]" value="passkey_login_prompt_suppress_days" />
+			</td>
+		</tr>
+	</table>
+</form>
+
+<!-- END_MODULE Admin_Config -->

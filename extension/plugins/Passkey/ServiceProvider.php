@@ -14,7 +14,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $version = '0.8.0';
+    public $version = '0.9.0';
 
     /**
      * @var string
@@ -61,6 +61,7 @@ class ServiceProvider extends ACMS_App
         // 管理画面：
         //   /admin/app_passkey_index/     → 全ユーザーのパスキー台帳（管理者専用）
         //   /admin/app_passkey_edit/      → 追加フォーム
+        //   /admin/app_passkey_setting/   → プラグイン設定（管理者専用）
         //   /uid/Y/admin/user_passkey/    → 自分のパスキー管理（全権限。テーマ改修不要）
         if (defined('ADMIN')) {
             $inject = InjectTemplate::singleton();
@@ -71,6 +72,9 @@ class ServiceProvider extends ACMS_App
             } elseif (ADMIN === 'app_passkey_edit') {
                 $inject->add('admin-topicpath', $base . 'topicpath.html');
                 $inject->add('admin-main', $base . 'edit.html');
+            } elseif (ADMIN === 'app_passkey_setting') {
+                $inject->add('admin-topicpath', $base . 'topicpath.html');
+                $inject->add('admin-main', $base . 'setting.html');
             } elseif (ADMIN === 'user_passkey') {
                 // テーマが admin/user/passkey.html を持つ場合はテーマ側を優先（二重表示防止）。
                 // config('theme') は init 時点で未確定の可能性があるため callable で遅延判定する
