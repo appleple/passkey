@@ -38,6 +38,23 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 - 「あとで」・ESC・オーバーレイクリックで閉じると localStorage（キーに SUID を含む）で `passkey_login_prompt_suppress_days` 日間（デフォルト 30）非表示
 - 管理者設定：台帳ページ（app_passkey_index）上部のフォームから標準の `ACMS_POST_Config` で保存（`config_edit` 権限ゲートは本体側）。ON/OFF は未チェック時の空値問題を避けるためラジオボタン
 
+### B4. 対象ユーザーの範囲（読者 / フロント会員は対象外）
+
+本プラグインは**管理ログインのみ**を対象とする。フロントのサインイン（会員機能）のパスキー対応は実装していない。
+
+| 権限 | パスキーログイン | 設定ページ | 推奨モーダル |
+|---|---|---|---|
+| 管理者 / 編集者 / 投稿者 | ○ | ○ | ○ |
+| 読者（subscriber） | × | × | × |
+
+読者が対象外になるのは次の 3 点によるもので、いずれも意図的な設計：
+
+1. **ログインボタン**：`Hook::injectLoginButton()` は `IS_SYSTEM_LOGIN_PAGE` でのみ注入するため、フロントのサインイン画面（`SIGNIN_SEGMENT`）には出ない
+2. **認証**：`POST/Passkey/LoginVerify` が `Engine::checkAdminLoginEligibility()` で user_auth / user_blog_id / IP / 端末制限という管理ログイン相当のガードをかける。仮に読者がパスキーを持っていても、認証成功後にここで拒否され監査ログに記録される（権限の抜け道にならない）
+3. **推奨モーダル**：一時 Cookie を立てるのは `ACMS_POST_Member_Admin_Login`（と派生クラス）を検知したときだけ。フロントのサインインは親クラスの `ACMS_POST_Member_Signin` なので `instanceof` が一致せず Cookie が立たない。加えて本体の `Login::getAdminLoginAuth()` が管理ログイン可能な権限を administrator / editor / contributor に限定している
+
+> **Note**: `signin_page_auth` が `contributor` に設定されている場合、本体仕様により投稿者も管理ログインの対象外になる（`getAdminLoginAuth()` が administrator / editor のみを返す）。この場合は投稿者もパスキーログイン・推奨モーダルの対象外。
+
 ### C. インストール → 即使える
 - テーマファイルの編集不要
 - `private/config.system.yaml` への追記不要
