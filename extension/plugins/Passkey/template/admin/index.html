@@ -22,6 +22,35 @@
 <hr class="clearHidden">
 
 <!-- BEGIN_MODULE Passkey_AdminLists -->
+
+<form action="" method="post" class="acms-admin-margin-bottom-medium">
+	<table class="acms-admin-table-admin-edit">
+		<tr>
+			<th class="acms-admin-table-nowrap">
+				<!--T-->設定推奨モーダル<!--/T-->
+				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->パスキー未登録のユーザーが管理画面にログインしたとき、設定をすすめるモーダルを表示します。<!--/T-->"></i>
+			</th>
+			<td>
+				<div class="acms-admin-form-radio">
+					<label><input type="radio" name="passkey_login_prompt" value="on"{login_prompt_on_checked}[raw] /><i class="acms-admin-ico-radio"></i> <!--T-->表示する<!--/T--></label>
+				</div>
+				<div class="acms-admin-form-radio">
+					<label><input type="radio" name="passkey_login_prompt" value="off"{login_prompt_off_checked}[raw] /><i class="acms-admin-ico-radio"></i> <!--T-->表示しない<!--/T--></label>
+				</div>
+				<input type="hidden" name="config[]" value="passkey_login_prompt" />
+			</td>
+		</tr>
+		<tr>
+			<th class="acms-admin-table-nowrap"><!--T-->「あとで」の非表示期間<!--/T--></th>
+			<td>
+				<input type="number" name="passkey_login_prompt_suppress_days" value="{login_prompt_suppress_days}" min="1" max="365" class="acms-admin-form-width-mini" /> <!--T-->日間<!--/T-->
+				<input type="hidden" name="config[]" value="passkey_login_prompt_suppress_days" />
+			</td>
+		</tr>
+	</table>
+	<input type="submit" name="ACMS_POST_Config" value="<!--T-->保存<!--/T-->" class="acms-admin-btn acms-admin-btn-save" />
+</form>
+
 <!-- BEGIN_IF [{passkey_count}/gt/0] -->
 
 <div class="acms-admin-table-scroll-xs acms-admin-table-scroll-sm acms-admin-table-scroll-md acms-admin-clear">

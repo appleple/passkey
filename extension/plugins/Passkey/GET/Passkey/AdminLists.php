@@ -79,8 +79,17 @@ class AdminLists extends ACMS_GET
                 Engine::datetimeVars('passkey_last_used', $row['passkey_last_used_at'])
             ));
         }
+        // ログイン後の設定推奨モーダル設定（未設定時のデフォルトは on / 30日）
+        $promptOn = config('passkey_login_prompt', 'on') === 'on';
+        $suppressDays = intval(config('passkey_login_prompt_suppress_days', '30'));
+        if ($suppressDays < 1) {
+            $suppressDays = 30;
+        }
         $tpl->add(null, [
             'passkey_count' => count($rows),
+            'login_prompt_on_checked' => $promptOn ? ' checked="checked"' : '',
+            'login_prompt_off_checked' => $promptOn ? '' : ' checked="checked"',
+            'login_prompt_suppress_days' => $suppressDays,
         ]);
 
         return $tpl->get();

@@ -30,6 +30,14 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 - **認証器名表示**：AAGUID から「Apple iCloud Keychain」「Windows Hello」「Google Password Manager」「YubiKey 5 Series」等を解決して表示（辞書は Engine::aaguidLabel() に内蔵）
 - **デフォルト名プリフィル**：登録時、User-Agent から推測して名前欄に初期値を入れる（Apple → `My Apple devices`、Windows → `Windows Hello`、Android → `Android` 等）
 
+### B3. 設定推奨モーダル（v0.8.0）
+- パスキー未登録のログインユーザーの管理画面に、設定をすすめるモーダルを `Hook::afterBuild()` で `</body>` 直前に注入（`template/admin-prompt.html`）
+- 表示条件：ログイン済み ∧ 一時 Cookie あり ∧ 自分のパスキー 0 件 ∧ config `passkey_login_prompt` が on（デフォルト on）。パスキー関連 3 ページ（user_passkey / app_passkey_*）では出さない
+- **管理画面に限定しない**：`login_auto_redirect` が on（デフォルト）だとログイン直後はフロントページに戻されるため。フロントでも崩れないようモーダルの装飾はインラインスタイルで自己完結させている
+- 表示はログイン 1 回につき 1 回だけ：`Hook::beforePostFire()` が管理ログイン（`ACMS_POST_Member_Admin_Login`、派生クラス含む）を検知して一時 Cookie（`acms_passkey_prompt_pending`、1時間・httponly・SameSite=Lax）を立て、ログイン後最初の管理画面表示で消費する
+- 「あとで」・ESC・オーバーレイクリックで閉じると localStorage（キーに SUID を含む）で `passkey_login_prompt_suppress_days` 日間（デフォルト 30）非表示
+- 管理者設定：台帳ページ（app_passkey_index）上部のフォームから標準の `ACMS_POST_Config` で保存（`config_edit` 権限ゲートは本体側）。ON/OFF は未チェック時の空値問題を避けるためラジオボタン
+
 ### C. インストール → 即使える
 - テーマファイルの編集不要
 - `private/config.system.yaml` への追記不要

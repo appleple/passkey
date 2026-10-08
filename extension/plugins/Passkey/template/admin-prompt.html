@@ -1,0 +1,52 @@
+<div id="acms-passkey-prompt" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, 0.5);">
+	<div role="dialog" aria-modal="true" aria-labelledby="acms-passkey-prompt-title" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100vw - 40px)); background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);">
+		<h2 id="acms-passkey-prompt-title" style="margin: 0 0 12px; font-size: 18px;">パスキーを設定しませんか？</h2>
+		<p style="margin: 0 0 20px; font-size: 14px; line-height: 1.7;">パスキーを設定すると、次回から Touch ID や Windows Hello などの生体認証で、パスワードを入力せずに安全にログインできます。</p>
+		<div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+			<button type="button" id="acms-passkey-prompt-later" style="appearance: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 10px 16px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; color: #333;">あとで</button>
+			<a href="{{PASSKEY_URL}}" style="display: inline-block; text-decoration: none; font-size: 14px; line-height: 1; padding: 10px 16px; border: 1px solid #1473e6; border-radius: 4px; background: #1473e6; color: #fff;">設定する</a>
+		</div>
+	</div>
+</div>
+<script>
+(function () {
+	var KEY = 'acms-passkey-prompt-suppress-until-{{SUID}}';
+	var SUPPRESS_DAYS = {{SUPPRESS_DAYS}};
+	var el = document.getElementById('acms-passkey-prompt');
+	if (!el) {
+		return;
+	}
+	try {
+		// 「あとで」で閉じたら SUPPRESS_DAYS 日間は表示しない
+		// （「ログインごとに1回」の制御はサーバ側の一時 Cookie で行う）
+		var until = parseInt(localStorage.getItem(KEY) || '0', 10);
+		if (Date.now() < until) {
+			return;
+		}
+	} catch (e) {
+		// ストレージが使えない環境では毎回表示
+	}
+	el.style.display = 'block';
+	var dismiss = function () {
+		try {
+			localStorage.setItem(KEY, String(Date.now() + SUPPRESS_DAYS * 24 * 60 * 60 * 1000));
+		} catch (e) {
+			// noop
+		}
+		if (el.parentNode) {
+			el.parentNode.removeChild(el);
+		}
+	};
+	document.getElementById('acms-passkey-prompt-later').addEventListener('click', dismiss);
+	el.addEventListener('click', function (e) {
+		if (e.target === el) {
+			dismiss();
+		}
+	});
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape') {
+			dismiss();
+		}
+	});
+})();
+</script>

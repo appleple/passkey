@@ -2,8 +2,37 @@
 
 namespace Acms\Plugins\Passkey;
 
+use App;
+use Acms\Services\Facades\Login;
+
 class Hook
 {
+    /**
+     * 設定推奨モーダルの「ログイン直後 1 回だけ」を実現する一時 Cookie 名。
+     * 管理ログイン POST で立て、ログイン後最初の管理画面表示で消費する。値は '1' のみ。
+     *
+     * @var string
+     */
+    const PROMPT_PENDING_COOKIE = 'acms_passkey_prompt_pending';
+
+    /**
+     * POST モジュール処理前のフック。
+     * 管理ログインの送信を検知したら、設定推奨モーダル用の一時 Cookie を立てる。
+     * （認証の成否はここでは分からないが、表示側でログイン済みチェックをするので問題ない）
+     *
+     * @param \ACMS_POST $thisModule
+     * @return void
+     */
+    public function beforePostFire($thisModule)
+    {
+        if (
+            class_exists('ACMS_POST_Member_Admin_Login')
+            && $thisModule instanceof \ACMS_POST_Member_Admin_Login
+        ) {
+            $this->setPromptPendingCookie();
+        }
+    }
+
     /**
      * レスポンス HTML への差し込み。テーマを触らずプラグインだけで完結させるための仕掛け。
      *
@@ -14,6 +43,7 @@ class Hook
     {
         $this->injectLoginButton($res);
         $this->injectUserEditRow($res);
+        $this->injectRegistrationPrompt($res);
     }
 
     /**
@@ -88,5 +118,107 @@ class Hook
             . '<td><a href="' . htmlspecialchars($url, ENT_QUOTES) . '" class="acms-admin-btn acms-admin-btn-info">設定する</a></td></tr>';
 
         $res = substr($res, 0, $insertAt) . $row . substr($res, $insertAt);
+    }
+
+    /**
+     * パスキー未登録のログインユーザーに、設定をすすめるモーダルを管理画面へ差し込む。
+     * - config「passkey_login_prompt」が on（未設定時のデフォルトも on）のときのみ
+     * - 「あとで」やオーバーレイクリックで閉じると localStorage で30日間非表示（JS 側）
+     * - パスキー関連ページでは出さない（設定中にかぶせない）
+     *
+     * @param string &$res
+     * @return void
+     */
+    protected function injectRegistrationPrompt(&$res)
+    {
+        if (!Login::isLoggedIn() || !SUID) {
+            return;
+        }
+        if (empty($_COOKIE[self::PROMPT_PENDING_COOKIE])) {
+            // ログイン直後ではない（通常の画面遷移）
+            return;
+        }
+        // ログイン1回につき判定1回。ここで消費する
+        // （login_auto_redirect が on だとログイン直後はフロントページに戻るため、
+        //   管理画面に限定せず最初に表示されたページで出す）
+        $this->clearPromptPendingCookie();
+
+        if (defined('ADMIN') && in_array(ADMIN, ['user_passkey', 'app_passkey_index', 'app_passkey_edit'], true)) {
+            return;
+        }
+        if (config('passkey_login_prompt', 'on') !== 'on') {
+            return;
+        }
+
+        /** @var \Acms\Plugins\Passkey\Engine $engine */
+        $engine = App::make('passkey.engine');
+        if (!empty($engine->getCredentialIdsByUser(intval(SUID)))) {
+            // 登録済みユーザーには出さない
+            return;
+        }
+
+        $pos = strripos($res, '</body>');
+        if ($pos === false) {
+            return;
+        }
+        $snippet = @file_get_contents(dirname(__FILE__) . '/template/admin-prompt.html');
+        if ($snippet === false || $snippet === '') {
+            return;
+        }
+        $url = acmsLink([
+            'bid' => BID,
+            'uid' => intval(SUID),
+            'admin' => 'user_passkey',
+        ]);
+        $days = intval(config('passkey_login_prompt_suppress_days', '30'));
+        if ($days < 1) {
+            $days = 30;
+        }
+        $snippet = str_replace(
+            ['{{PASSKEY_URL}}', '{{SUID}}', '{{SUPPRESS_DAYS}}'],
+            [htmlspecialchars($url, ENT_QUOTES), intval(SUID), $days],
+            $snippet
+        );
+
+        $res = substr($res, 0, $pos) . $snippet . "\n" . substr($res, $pos);
+    }
+
+    /**
+     * 設定推奨モーダル用の一時 Cookie を立てる（有効期限 1 時間）
+     *
+     * @return void
+     */
+    protected function setPromptPendingCookie()
+    {
+        if (headers_sent()) {
+            return;
+        }
+        setcookie(self::PROMPT_PENDING_COOKIE, '1', [
+            'expires' => REQUEST_TIME + 3600,
+            'path' => '/',
+            'secure' => !empty($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    /**
+     * 設定推奨モーダル用の一時 Cookie を消す
+     *
+     * @return void
+     */
+    protected function clearPromptPendingCookie()
+    {
+        unset($_COOKIE[self::PROMPT_PENDING_COOKIE]);
+        if (headers_sent()) {
+            return;
+        }
+        setcookie(self::PROMPT_PENDING_COOKIE, '', [
+            'expires' => REQUEST_TIME - 3600,
+            'path' => '/',
+            'secure' => !empty($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 }
