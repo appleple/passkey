@@ -90,18 +90,6 @@ composer 依存（lbuchs/webauthn）は同梱済みのため、通常は追加�
 | `passkey_rp_name` | 認証時にブラウザが表示するサイト名。未設定ならサイト名を使います |
 | `passkey_user_verification` | 生体認証・PIN の要求レベル（`required` / `preferred` / `discouraged`）。初期値は `preferred` |
 
-## 表示をカスタマイズしたい場合
-
-パスキー管理ページの見た目を変えたい場合は、`theme-dist/admin/user/passkey.html` をテーマにコピーして編集してください。
-
-```bash
-cp theme-dist/admin/user/passkey.html /path/to/themes/あなたのテーマ/admin/user/passkey.html
-```
-
-テーマに `admin/user/passkey.html` があれば、プラグインは自動表示をやめてテーマ側を優先します。テーマの `admin/user/edit.html` に `admin/user_passkey/` へのリンクを独自に設置している場合も、ボタンの自動表示はスキップされます（二重表示を防ぐため）。
-
-> **Note**: テンプレートを変更しても表示が変わらない場合は、テンプレートキャッシュ（`cache/template-*`）を削除してください。
-
 ## 詳細仕様
 
 [extension/plugins/Passkey/SPEC.md](./extension/plugins/Passkey/SPEC.md) を参照してください。アーキテクチャ、認証フロー（シーケンス図付き）、DB スキーマ、エンドポイント、セキュリティ、本体組み込み時の設計提案を記載しています。

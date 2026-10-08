@@ -261,7 +261,7 @@ POST は `ACMS_POST` 標準 CSRF（`formToken`）に乗る。JS は `window.csrf
 |---|---|
 | `/admin/app_passkey_index/` | `template/admin/index.html`（Passkey_AdminLists / 管理者専用の全ユーザー台帳） |
 | `/admin/app_passkey_edit/` | `template/admin/edit.html` |
-| `/uid/Y/admin/user_passkey/` | テーマの `admin/user/passkey.html`（`theme-dist/` から配布。Passkey_Lists / 本人のみ） |
+| `/uid/Y/admin/user_passkey/` | `template/admin/user.html`（Passkey_Lists / 本人のみ。テーマに `admin/user/passkey.html` があればそちらを優先） |
 
 ---
 
