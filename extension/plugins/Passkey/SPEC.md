@@ -27,7 +27,7 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 ### B2. ユーザー管理ページからの自分のパスキー管理（v0.6.0 テーマ拡張 → v0.7.0 自動注入）
 - `/bid/X/uid/Y/admin/user_passkey/` — 自分のパスキー一覧＋追加＋削除（1 ページ完結）
 - **v0.7.0 からテーマ改修不要**。2 つの注入で実現：
-  - ページ本体： `_layouts/admin.html` の inject ポイント `admin-main` / `admin-topicpath` に、`ADMIN === 'user_passkey'` のとき `template/admin/user.html` / `topicpath.html` を注入（ServiceProvider）。テーマが `admin/user/passkey.html` を持つ場合は callable 内の判定でテーマ側を優先（`themeProvidesUserPasskeyTemplate()`。テーマ名の `@` 継承チェーンを遡って is_file 判定）
+  - ページ本体： `_layouts/admin.html` の inject ポイント `admin-main` / `admin-topicpath` に、`ADMIN === 'user_passkey'` のとき `template/admin/user.html` / `topicpath.html` を注入（ServiceProvider）。**`InjectTemplate::add()` は文字列パス形式のみを使う**こと。callable 形式は Ver. 3.2.24 以降でしか使えず、それ以前は `$item` を文字列補間するため Closure を渡すと致命的エラーになる（対応下限を 3.1.0 に保つための制約）
   - 設定ボタン： `Hook::afterBuild()` で `ADMIN === 'user_edit'` のレスポンス HTML に「パスキー：設定する」行を文字列挿入。アンカーは `admin/user_tfa/`（２段階認証行）→ 無ければ `name="retype_pass"`。レスポンスに `admin/user_passkey/` が既に含まれる場合（テーマで設置済み）はスキップ。新規作成画面（UID 空）もスキップ
 - `app_*` と違い管理者以外（編集者・投稿者）もアクセスできる。GET/POST モジュールが SUID ベースなので、誰が開いても自分のパスキーしか操作できない。他人の uid で開くと案内のみ表示（テンプレ側 `BEGIN_IF [%{UID}/eq/%{SUID}]`）
 - **認証器名表示**：AAGUID から「Apple iCloud Keychain」「Windows Hello」「Google Password Manager」「YubiKey 5 Series」等を解決して表示（辞書は Engine::aaguidLabel() に内蔵）
@@ -261,7 +261,7 @@ POST は `ACMS_POST` 標準 CSRF（`formToken`）に乗る。JS は `window.csrf
 |---|---|
 | `/admin/app_passkey_index/` | `template/admin/index.html`（Passkey_AdminLists / 管理者専用の全ユーザー台帳） |
 | `/admin/app_passkey_edit/` | `template/admin/edit.html` |
-| `/uid/Y/admin/user_passkey/` | `template/admin/user.html`（Passkey_Lists / 本人のみ。テーマに `admin/user/passkey.html` があればそちらを優先） |
+| `/uid/Y/admin/user_passkey/` | `template/admin/user.html`（Passkey_Lists / 本人のみ） |
 
 ---
 
@@ -376,7 +376,14 @@ PR/Issue にする場合の骨子。プラグイン版コードを namespace 付
 
 ## 9. 動作要件
 
+- a-blog cms 3.1.0 以上
+  - Ver. 3.1 で管理ログイン（`/login/`）と会員サインイン（`/signin/`）が分離され、本プラグインはその構造に依存する
+    （`IS_SYSTEM_LOGIN_PAGE` / `ACMS_POST_Member_Admin_Login` / `Login::getAdminLoginAuth()` / `Login::canLoginPage()`）
+  - 3.0 以前はログイン画面がテーマのテンプレートでボタンの自動注入ができず、
+    管理ログイン可能権限を判定する `getAdminLoginAuth()` 相当も無いため対応しない
+  - `AcmsLogger` は Ver. 3.1.0 追加。全箇所 `class_exists()` でガード済み
 - PHP 8.0 以上（ext-openssl, ext-mbstring, ext-sodium 推奨）
+  - `vendor/composer/platform_check.php` が実行時に `PHP_VERSION_ID >= 80000` を強制する
 - HTTPS 必須（WebAuthn API がブラウザで HTTP を拒否）
 - ブラウザは WebAuthn Level 2 対応（最新の Chrome / Safari / Edge / Firefox）
 - 認証器は platform（Touch ID / Face ID / Hello / Android 生体）または roaming（YubiKey 等）

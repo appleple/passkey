@@ -14,7 +14,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $version = '0.9.0';
+    public $version = '0.10.0';
 
     /**
      * @var string
@@ -76,20 +76,9 @@ class ServiceProvider extends ACMS_App
                 $inject->add('admin-topicpath', $base . 'topicpath.html');
                 $inject->add('admin-main', $base . 'setting.html');
             } elseif (ADMIN === 'user_passkey') {
-                // テーマが admin/user/passkey.html を持つ場合はテーマ側を優先（二重表示防止）。
-                // config('theme') は init 時点で未確定の可能性があるため callable で遅延判定する
-                $inject->add('admin-topicpath', function () use ($base) {
-                    if (self::themeProvidesUserPasskeyTemplate()) {
-                        return '';
-                    }
-                    return '<!--#include file="' . $base . 'topicpath.html" vars=""-->';
-                });
-                $inject->add('admin-main', function () use ($base) {
-                    if (self::themeProvidesUserPasskeyTemplate()) {
-                        return '';
-                    }
-                    return '<!--#include file="' . $base . 'user.html" vars=""-->';
-                });
+                // 文字列パスのみを使う（callable 形式は Ver. 3.2.24 以降のため）
+                $inject->add('admin-topicpath', $base . 'topicpath.html');
+                $inject->add('admin-main', $base . 'user.html');
             }
         }
 
@@ -117,28 +106,6 @@ class ServiceProvider extends ACMS_App
             }
             return new Engine($rpName, $rpId, $userVerification);
         });
-    }
-
-    /**
-     * 現在のテーマ（継承チェーン含む）が admin/user/passkey.html を提供しているか。
-     * 提供している場合はテーマ側を正としてプラグインからの注入を止める。
-     *
-     * テーマ名は "blog@site" のように @ で継承を表すため、
-     * "blog@site" → "site" の順にディレクトリを確認する（system は同梱しないので見ない）。
-     *
-     * @return bool
-     */
-    public static function themeProvidesUserPasskeyTemplate(): bool
-    {
-        $parts = explode('@', (string)config('theme'));
-        while (!empty($parts)) {
-            $dir = SCRIPT_DIR . THEMES_DIR . implode('@', $parts) . '/admin/user/passkey.html';
-            if (is_file($dir)) {
-                return true;
-            }
-            array_shift($parts);
-        }
-        return false;
     }
 
     /**

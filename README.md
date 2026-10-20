@@ -16,8 +16,8 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 
 ## 動作要件
 
-- a-blog cms 3.2.x
-- PHP 8.1 以上（ext-openssl, ext-mbstring 必須、ext-sodium 推奨）
+- a-blog cms 3.1.0 以上
+- PHP 8.0 以上（ext-openssl, ext-mbstring 必須、ext-sodium 推奨）
 - HTTPS（WebAuthn API はブラウザが HTTP を拒否するため）
 - WebAuthn Level 2 対応ブラウザ（最新の Chrome / Safari / Edge / Firefox）
 
