@@ -99,4 +99,15 @@
 </div>
 
 <!-- END_IF -->
+<!-- BEGIN_IF [{hook_disabled}/eq/1] -->
+<div role="alert" class="acms-admin-alert acms-admin-alert-danger acms-admin-alert-icon" style="margin-top: 24px;">
+	<span class="acms-admin-icon acms-admin-icon-attention acms-admin-alert-icon-before" aria-hidden="true"></span>
+	<strong><!--T-->フック拡張が無効のため、パスキーが利用できません。<!--/T--></strong>
+	<p style="margin: 8px 0 0;">
+		<!--T-->ログイン画面への「パスキーでログイン」ボタンの追加などにフック機能を使用しています。サーバー上の config.server.php を開き、次のように変更してください。<!--/T-->
+	</p>
+	<pre style="margin: 8px 0 0; padding: 8px; background: #fff; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto;"><code>define('HOOK_ENABLE', 1);</code></pre>
+</div>
+<!-- END_IF -->
+
 <!-- END_MODULE Passkey_AdminLists -->

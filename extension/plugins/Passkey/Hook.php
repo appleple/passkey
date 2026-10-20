@@ -137,7 +137,7 @@ class Hook
     /**
      * パスキー未登録のログインユーザーに、設定をすすめるモーダルを管理画面へ差し込む。
      * - config「passkey_login_prompt」が on（未設定時のデフォルトも on）のときのみ
-     * - 「あとで」やオーバーレイクリックで閉じると localStorage で30日間非表示（JS 側）
+     * - 「あとで」やオーバーレイクリックで閉じると localStorage で既定 7 日間非表示（JS 側）
      * - パスキー関連ページでは出さない（設定中にかぶせない）
      *
      * @param string &$res
@@ -184,9 +184,9 @@ class Hook
             'uid' => intval(SUID),
             'admin' => 'user_passkey',
         ]);
-        $days = intval(config('passkey_login_prompt_suppress_days', '30'));
+        $days = intval(config('passkey_login_prompt_suppress_days', '7'));
         if ($days < 1) {
-            $days = 30;
+            $days = 7;
         }
         $snippet = str_replace(
             ['{{PASSKEY_URL}}', '{{SUID}}', '{{SUPPRESS_DAYS}}'],
