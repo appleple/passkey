@@ -37,7 +37,7 @@
 			<td>
 				<input type="hidden" name="passkey_login_prompt" value="off" />
 				<div class="acms-admin-form-checkbox">
-					<input type="checkbox" name="passkey_login_prompt" value="on"{passkey_login_prompt:checked#on} id="input-checkbox-passkey-login-prompt" />
+					<input type="checkbox" name="passkey_login_prompt" value="on"<!-- BEGIN_IF [{passkey_login_prompt}/neq/off] --> checked="checked"<!-- END_IF --> id="input-checkbox-passkey-login-prompt" />
 					<label for="input-checkbox-passkey-login-prompt">
 						<i class="acms-admin-ico-checkbox"></i>
 						<!--T-->パスキー未登録のユーザーに設定をすすめるモーダルを表示する<!--/T-->
@@ -49,10 +49,14 @@
 		<tr>
 			<th>
 				<!--T-->「あとで」の非表示期間<!--/T-->
-				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->モーダルを「あとで」で閉じたあと、再び表示するまでの日数です。記録はブラウザごとに保存されます。未入力や 0 以下の場合は 30 日として扱われます。<!--/T-->"></i>
+				<i class="acms-admin-icon-tooltip js-acms-tooltip-hover" data-acms-tooltip="<!--T-->モーダルを「あとで」で閉じたあと、再び表示するまでの日数です。記録はブラウザごとに保存されます。未入力や 0 以下の場合は 7 日として扱われます。<!--/T-->"></i>
 			</th>
 			<td>
+				<!-- BEGIN_IF [{passkey_login_prompt_suppress_days}/em/] -->
+				<input type="number" name="passkey_login_prompt_suppress_days" value="7" min="1" max="365" class="acms-admin-form-width-mini" id="input-text-passkey-suppress-days" />
+				<!-- ELSE -->
 				<input type="number" name="passkey_login_prompt_suppress_days" value="{passkey_login_prompt_suppress_days}" min="1" max="365" class="acms-admin-form-width-mini" id="input-text-passkey-suppress-days" />
+				<!-- END_IF -->
 				<label for="input-text-passkey-suppress-days"><!--T-->日間<!--/T--></label>
 				<input type="hidden" name="config[]" value="passkey_login_prompt_suppress_days" />
 			</td>
