@@ -40,17 +40,10 @@ class Compat
      */
     public static function isLoggedIn(): bool
     {
-        if (!defined('SUID') || !SUID) {
-            return false;
-        }
-        if (method_exists(Login::class, 'isLoggedIn')) {
-            try {
-                return (bool)Login::isLoggedIn();
-            } catch (\Throwable $e) {
-                // サービス側に無ければ SUID の判定に委ねる
-            }
-        }
-        return true;
+        // 本体の Login::isLoggedIn() は引数なしだとセッションユーザー ID の検査と
+        // 等価なので、SUID をそのまま使う。ファサードは __callStatic で動的解決する
+        // ため method_exists() による存在確認ができず、分岐しても意味がない。
+        return defined('SUID') && (bool)SUID;
     }
 
     /**
