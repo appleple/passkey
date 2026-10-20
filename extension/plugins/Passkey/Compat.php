@@ -73,20 +73,26 @@ class Compat
     }
 
     /**
-     * パスキーログインボタンを差し込む位置（この文字列の直前に挿入する）。
-     * 先に見つかったものを使う。
+     * パスキーログインボタンの差し込み位置の候補。先に見つかったものを使う。
      *
-     * @return string[]
+     * position は挿入方法：
+     *   'before'          … marker の直前に挿入
+     *   'after-paragraph' … marker 以降で最初に現れる </p> の直後に挿入
+     *
+     * パスワード入力とログインボタンより後ろに置きたいので、3.0 では
+     * 「パスワードをお忘れですか？」の段落の直後を第一候補にする。
+     *
+     * @return array<int,array{marker:string,position:string}>
      */
-    public static function loginButtonMarkers(): array
+    public static function loginButtonAnchors(): array
     {
         return [
-            // 3.1 以降の管理ログイン画面
-            '<div class="acms-admin-login-main-box-bottom">',
-            // 3.0: SNS ログインの「もしくは」区切り（SNS ログインが有効な場合）
-            '<p class="acms-admin-border">',
-            // 3.0: ログインボタンの段落（最後の砦）
-            '<p class="loginAction">',
+            // 3.1 以降：ログインフォーム下部の専用ブロック
+            ['marker' => '<div class="acms-admin-login-main-box-bottom">', 'position' => 'before'],
+            // 3.0：パスワード再発行リンクの段落の直後（LOGIN_SEGMENT が変わっても一致する）
+            ['marker' => 'alt/remind/', 'position' => 'after-paragraph'],
+            // 3.0：再発行リンクが無い構成では、ログインボタンの段落の直後
+            ['marker' => '<p class="loginAction">', 'position' => 'after-paragraph'],
         ];
     }
 

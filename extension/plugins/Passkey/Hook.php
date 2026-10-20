@@ -54,13 +54,24 @@ class Hook
         if (!Compat::isLoginPage($res)) {
             return;
         }
-        // バージョンごとにマークアップが異なるため、見つかった目印の直前に差し込む
+        // バージョンごとにマークアップが異なるため、候補を順に試して差し込み位置を決める
         $pos = false;
-        foreach (Compat::loginButtonMarkers() as $marker) {
-            $pos = strpos($res, $marker);
-            if ($pos !== false) {
+        foreach (Compat::loginButtonAnchors() as $anchor) {
+            $found = strpos($res, $anchor['marker']);
+            if ($found === false) {
+                continue;
+            }
+            if ($anchor['position'] === 'before') {
+                $pos = $found;
                 break;
             }
+            // 'after-paragraph': 目印を含む段落の終わりに差し込む
+            $close = strpos($res, '</p>', $found);
+            if ($close === false) {
+                continue;
+            }
+            $pos = $close + strlen('</p>');
+            break;
         }
         if ($pos === false) {
             return;
