@@ -6,6 +6,7 @@ use App;
 use ACMS_POST;
 use AcmsLogger;
 use Acms\Services\Facades\Login;
+use Acms\Plugins\Passkey\Compat;
 
 /**
  * 標準 SNS の Unregister と同じ作法。
@@ -15,7 +16,7 @@ class Unregister extends ACMS_POST
 {
     public function post()
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return $this->Post;
         }
         // 削除は機能 OFF でも許可（無効化後に既存ユーザが解除できるように）

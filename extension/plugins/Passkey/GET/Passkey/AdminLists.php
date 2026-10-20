@@ -8,6 +8,7 @@ use Template;
 use ACMS_Corrector;
 use Acms\Services\Facades\Login;
 use Acms\Plugins\Passkey\Engine;
+use Acms\Plugins\Passkey\Compat;
 
 /**
  * 全ユーザーの登録済みパスキー一覧（管理者専用の台帳）。
@@ -35,7 +36,7 @@ class AdminLists extends ACMS_GET
 {
     public function get()
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return '';
         }
         if (!sessionWithAdministration()) {

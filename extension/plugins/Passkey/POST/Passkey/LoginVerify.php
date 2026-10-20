@@ -12,6 +12,7 @@ use Acms\Services\Facades\Login;
 use Acms\Services\Facades\Common;
 use Acms\Services\Facades\Webhook;
 use Acms\Plugins\Passkey\Engine;
+use Acms\Plugins\Passkey\Compat;
 
 class LoginVerify extends ACMS_POST
 {
@@ -32,7 +33,7 @@ class LoginVerify extends ACMS_POST
     public function post()
     {
         try {
-            if (Login::isLoggedIn()) {
+            if (Compat::isLoggedIn()) {
                 throw new \RuntimeException('既にログイン済みです。');
             }
 
@@ -71,8 +72,8 @@ class LoginVerify extends ACMS_POST
             $sql->addWhereOpr('user_id', $uid);
             DB::query($sql->get(dsn()), 'exec');
 
-            // セッション生成（標準ログインと同じ）
-            generateSession($uid);
+            // セッション生成（標準ログインと同じ。3.0 は user 配列、3.1 以降は uid）
+            Compat::generateLoginSession($user);
 
             $userName = ACMS_RAM::userName($uid);
             if (class_exists('AcmsLogger')) {

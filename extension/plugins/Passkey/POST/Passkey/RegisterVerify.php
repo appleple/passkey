@@ -8,13 +8,14 @@ use AcmsLogger;
 use Acms\Services\Facades\Login;
 use Acms\Services\Facades\Common;
 use Acms\Plugins\Passkey\Engine;
+use Acms\Plugins\Passkey\Compat;
 
 class RegisterVerify extends ACMS_POST
 {
     public function post()
     {
         try {
-            if (!Login::isLoggedIn() || !SUID) {
+            if (!Compat::isLoggedIn() || !SUID) {
                 throw new \RuntimeException('ログインしてください。');
             }
             if (isCSRF()) {

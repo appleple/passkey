@@ -6,6 +6,7 @@ use App;
 use ACMS_POST;
 use AcmsLogger;
 use Acms\Services\Facades\Login;
+use Acms\Plugins\Passkey\Compat;
 
 /**
  * 管理者による任意ユーザーのパスキー削除（台帳画面用）。
@@ -16,7 +17,7 @@ class AdminUnregister extends ACMS_POST
 {
     public function post()
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return $this->Post;
         }
         if (!sessionWithAdministration()) {

@@ -25,10 +25,7 @@ class Hook
      */
     public function beforePostFire($thisModule)
     {
-        if (
-            class_exists('ACMS_POST_Member_Admin_Login')
-            && $thisModule instanceof \ACMS_POST_Member_Admin_Login
-        ) {
+        if (Compat::isAdminLoginModule($thisModule)) {
             $this->setPromptPendingCookie();
         }
     }
@@ -54,11 +51,17 @@ class Hook
      */
     protected function injectLoginButton(&$res)
     {
-        if (!defined('IS_SYSTEM_LOGIN_PAGE') || !IS_SYSTEM_LOGIN_PAGE) {
+        if (!Compat::isLoginPage($res)) {
             return;
         }
-        $marker = '<div class="acms-admin-login-main-box-bottom">';
-        $pos = strpos($res, $marker);
+        // バージョンごとにマークアップが異なるため、見つかった目印の直前に差し込む
+        $pos = false;
+        foreach (Compat::loginButtonMarkers() as $marker) {
+            $pos = strpos($res, $marker);
+            if ($pos !== false) {
+                break;
+            }
+        }
         if ($pos === false) {
             return;
         }
@@ -131,7 +134,7 @@ class Hook
      */
     protected function injectRegistrationPrompt(&$res)
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return;
         }
         if (empty($_COOKIE[self::PROMPT_PENDING_COOKIE])) {

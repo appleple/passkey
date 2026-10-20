@@ -8,6 +8,7 @@ use Template;
 use ACMS_Corrector;
 use Acms\Services\Facades\Login;
 use Acms\Plugins\Passkey\Engine;
+use Acms\Plugins\Passkey\Compat;
 
 /**
  * セッションユーザ（SUID）のパスキー一覧を返す GET モジュール。
@@ -29,7 +30,7 @@ class Lists extends ACMS_GET
 {
     public function get()
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return '';
         }
 
