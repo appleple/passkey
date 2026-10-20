@@ -7,13 +7,14 @@ use ACMS_POST;
 use ACMS_RAM;
 use Acms\Services\Facades\Login;
 use Acms\Plugins\Passkey\Engine;
+use Acms\Plugins\Passkey\Compat;
 
 class RegisterOptions extends ACMS_POST
 {
     public function post()
     {
         try {
-            if (!Login::isLoggedIn() || !SUID) {
+            if (!Compat::isLoggedIn() || !SUID) {
                 throw new \RuntimeException('ログインしてください。');
             }
             if (isCSRF()) {

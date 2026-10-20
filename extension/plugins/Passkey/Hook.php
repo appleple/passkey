@@ -25,10 +25,7 @@ class Hook
      */
     public function beforePostFire($thisModule)
     {
-        if (
-            class_exists('ACMS_POST_Member_Admin_Login')
-            && $thisModule instanceof \ACMS_POST_Member_Admin_Login
-        ) {
+        if (Compat::isAdminLoginModule($thisModule)) {
             $this->setPromptPendingCookie();
         }
     }
@@ -54,11 +51,28 @@ class Hook
      */
     protected function injectLoginButton(&$res)
     {
-        if (!defined('IS_SYSTEM_LOGIN_PAGE') || !IS_SYSTEM_LOGIN_PAGE) {
+        if (!Compat::isLoginPage($res)) {
             return;
         }
-        $marker = '<div class="acms-admin-login-main-box-bottom">';
-        $pos = strpos($res, $marker);
+        // バージョンごとにマークアップが異なるため、候補を順に試して差し込み位置を決める
+        $pos = false;
+        foreach (Compat::loginButtonAnchors() as $anchor) {
+            $found = strpos($res, $anchor['marker']);
+            if ($found === false) {
+                continue;
+            }
+            if ($anchor['position'] === 'before') {
+                $pos = $found;
+                break;
+            }
+            // 'after-paragraph': 目印を含む段落の終わりに差し込む
+            $close = strpos($res, '</p>', $found);
+            if ($close === false) {
+                continue;
+            }
+            $pos = $close + strlen('</p>');
+            break;
+        }
         if ($pos === false) {
             return;
         }
@@ -123,7 +137,7 @@ class Hook
     /**
      * パスキー未登録のログインユーザーに、設定をすすめるモーダルを管理画面へ差し込む。
      * - config「passkey_login_prompt」が on（未設定時のデフォルトも on）のときのみ
-     * - 「あとで」やオーバーレイクリックで閉じると localStorage で30日間非表示（JS 側）
+     * - 「あとで」やオーバーレイクリックで閉じると localStorage で既定 7 日間非表示（JS 側）
      * - パスキー関連ページでは出さない（設定中にかぶせない）
      *
      * @param string &$res
@@ -131,7 +145,7 @@ class Hook
      */
     protected function injectRegistrationPrompt(&$res)
     {
-        if (!Login::isLoggedIn() || !SUID) {
+        if (!Compat::isLoggedIn() || !SUID) {
             return;
         }
         if (empty($_COOKIE[self::PROMPT_PENDING_COOKIE])) {
@@ -170,9 +184,9 @@ class Hook
             'uid' => intval(SUID),
             'admin' => 'user_passkey',
         ]);
-        $days = intval(config('passkey_login_prompt_suppress_days', '30'));
+        $days = intval(config('passkey_login_prompt_suppress_days', '7'));
         if ($days < 1) {
-            $days = 30;
+            $days = 7;
         }
         $snippet = str_replace(
             ['{{PASSKEY_URL}}', '{{SUID}}', '{{SUPPRESS_DAYS}}'],

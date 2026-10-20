@@ -5,13 +5,14 @@ namespace Acms\Plugins\Passkey\POST\Passkey;
 use App;
 use ACMS_POST;
 use Acms\Services\Facades\Login;
+use Acms\Plugins\Passkey\Compat;
 
 class LoginOptions extends ACMS_POST
 {
     public function post()
     {
         try {
-            if (Login::isLoggedIn()) {
+            if (Compat::isLoggedIn()) {
                 throw new \RuntimeException('既にログイン済みです。');
             }
 

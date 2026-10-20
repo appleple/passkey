@@ -287,13 +287,9 @@ class Engine
         $errors = [];
         $auth = isset($user['user_auth']) ? (string)$user['user_auth'] : '';
 
-        // 権限チェック：getAdminLoginAuth が無い旧バージョンは固定リストでフォールバック
-        try {
-            $allowedAuths = Login::getAdminLoginAuth();
-        } catch (\Throwable $e) {
-            $allowedAuths = ['administrator', 'editor', 'contributor'];
-        }
-        if (!in_array($auth, $allowedAuths, true)) {
+        // 権限チェック（3.0 はログインが一本化され本体も権限で制限しないため null が返る）
+        $allowedAuths = Compat::allowedLoginAuths();
+        if ($allowedAuths !== null && !in_array($auth, $allowedAuths, true)) {
             $errors[] = '管理ログインの権限がありません';
         }
 
@@ -304,22 +300,14 @@ class Engine
             $errors[] = '別のブログに所属するユーザーです';
         }
 
-        // IP 制限：旧バージョンに無ければスキップ
-        try {
-            if (!Login::canAccessAdminLoginFromCurrentIp()) {
-                $errors[] = 'このIPアドレスからのログインは許可されていません';
-            }
-        } catch (\Throwable $e) {
-            // 旧バージョンの a-blog cms はこのメソッドを持たない → IP 制限はスキップ
+        // IP 制限（3.1 以降の機能。3.0 には存在しないため常に許可）
+        if (!Compat::canAccessFromCurrentIp()) {
+            $errors[] = 'このIPアドレスからのログインは許可されていません';
         }
 
-        // 端末制限：旧バージョンに無ければスキップ
-        try {
-            if (!Login::checkAllowedDevice($user)) {
-                $errors[] = '許可されていない端末です';
-            }
-        } catch (\Throwable $e) {
-            // 旧バージョンの a-blog cms はこのメソッドを持たない → 端末制限はスキップ
+        // 端末制限：パスワードログインと同じ判定を必ず通す（省くと抜け道になる）
+        if (!Compat::isAllowedDevice($user)) {
+            $errors[] = '許可されていない端末です';
         }
 
         return $errors;
