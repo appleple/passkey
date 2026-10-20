@@ -19,7 +19,7 @@ class LoginVerify extends ACMS_POST
     /**
      * 正常なルート（管理ログイン URL）からのみ受け付ける。
      * 旧バージョンの a-blog cms に Login::canLoginPage が無い場合は素通し
-     * （後続の Login::isLoggedIn 等のチェックは継続）。
+     * （後続のログイン状態チェックは継続）。
      */
     protected function isValidPostRoute(): bool
     {
