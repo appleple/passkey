@@ -23,11 +23,7 @@ class LoginVerify extends ACMS_POST
      */
     protected function isValidPostRoute(): bool
     {
-        try {
-            return Login::canLoginPage(BID, LOGIN_SEGMENT);
-        } catch (\Throwable $e) {
-            return true;
-        }
+        return Compat::isValidLoginRoute();
     }
 
     public function post()

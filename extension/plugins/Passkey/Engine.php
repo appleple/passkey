@@ -300,13 +300,9 @@ class Engine
             $errors[] = '別のブログに所属するユーザーです';
         }
 
-        // IP 制限：旧バージョンに無ければスキップ
-        try {
-            if (!Login::canAccessAdminLoginFromCurrentIp()) {
-                $errors[] = 'このIPアドレスからのログインは許可されていません';
-            }
-        } catch (\Throwable $e) {
-            // 旧バージョンの a-blog cms はこのメソッドを持たない → IP 制限はスキップ
+        // IP 制限（3.1 以降の機能。3.0 には存在しないため常に許可）
+        if (!Compat::canAccessFromCurrentIp()) {
+            $errors[] = 'このIPアドレスからのログインは許可されていません';
         }
 
         // 端末制限：パスワードログインと同じ判定を必ず通す（省くと抜け道になる）

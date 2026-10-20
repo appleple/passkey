@@ -150,6 +150,46 @@ class Compat
     }
 
     /**
+     * 現在のブログ・URL がログインページとして正当か（POST の経路チェック用）。
+     *
+     * Login::canLoginPage() は 3.1 以降の API。3.0 には無いため素通しする
+     * （呼び出し側では後続のログイン状態チェックが継続する）。
+     *
+     * @return bool
+     */
+    public static function isValidLoginRoute(): bool
+    {
+        if (self::isLegacy()) {
+            return true;
+        }
+        try {
+            return (bool)Login::canLoginPage(BID, LOGIN_SEGMENT);
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    /**
+     * 現在の IP からログインが許可されているか。
+     *
+     * 管理ログイン用の IP 制限は 3.1 以降の機能で、3.0 には存在しない。
+     * 3.0 では制限そのものが無いため常に許可する（塞ぐべき抜け道が無い）。
+     *
+     * @return bool
+     */
+    public static function canAccessFromCurrentIp(): bool
+    {
+        if (self::isLegacy()) {
+            return true;
+        }
+        try {
+            return (bool)Login::canAccessAdminLoginFromCurrentIp();
+        } catch (\Throwable $e) {
+            return true; // 本体に判定が無ければ制限なしとみなす
+        }
+    }
+
+    /**
      * 端末制限を満たしているか。
      *
      * パスワードログインが課している制限をパスキー経路でも必ず踏襲する
