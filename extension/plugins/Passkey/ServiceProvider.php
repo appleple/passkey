@@ -24,7 +24,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $author = 'com.kazumich';
+    public $author = 'com.appleple';
 
     /**
      * @var bool
