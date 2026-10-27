@@ -43,19 +43,11 @@ Passkey-X.Y.Z/
 
 `extension` フォルダをそのままアップロードしても構いません。既存のフォルダに統合されます。**README.md はアップロードしないでください**（サーバー上に不要なファイルが残ります）。
 
-### コマンドラインの場合
-
-```bash
-cp -r extension/plugins/Passkey /path/to/ablogcms/extension/plugins/
-```
-
-composer 依存（lbuchs/webauthn）は同梱済みのため、追加の作業は不要です。
-
 ### 有効化
 
 管理画面の「拡張アプリ」から **Passkey をインストール → 有効化** してください。サイドバーに「拡張メニュー > Passkey」が現れます。
 
-### Ver. 3.0.x をお使いの場合の注意
+### config.server.php の設定
 
 `config.server.php` の `HOOK_ENABLE` を **1** にしてください。Ver. 3.0 では既定値が 0 で、このままではログイン画面に「パスキーでログイン」ボタンが追加されません。
 
