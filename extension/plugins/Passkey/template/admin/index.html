@@ -99,6 +99,16 @@
 </div>
 
 <!-- END_IF -->
+<!-- BEGIN_IF [{vendor_missing}/eq/1] -->
+<div role="alert" class="acms-admin-alert acms-admin-alert-danger acms-admin-alert-icon" style="margin-top: 24px;">
+	<span class="acms-admin-icon acms-admin-icon-attention acms-admin-alert-icon-before" aria-hidden="true"></span>
+	<strong><!--T-->同梱ライブラリが見つからないため、パスキーが利用できません。<!--/T--></strong>
+	<p style="margin: 8px 0 0;">
+		<!--T-->プラグイン内の vendor ディレクトリがサーバー上に存在しません。アップロード時に欠落した可能性があります。配布物の extension/plugins/Passkey/vendor/ を、ディレクトリごと再アップロードしてください。<!--/T-->
+	</p>
+</div>
+<!-- END_IF -->
+
 <!-- BEGIN_IF [{hook_disabled}/eq/1] -->
 <div role="alert" class="acms-admin-alert acms-admin-alert-danger acms-admin-alert-icon" style="margin-top: 24px;">
 	<span class="acms-admin-icon acms-admin-icon-attention acms-admin-alert-icon-before" aria-hidden="true"></span>

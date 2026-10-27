@@ -58,6 +58,8 @@ class Lists extends ACMS_GET
             'passkey_count' => count($rows),
             // フック拡張が無効だとログインボタンもモーダルも動かないため画面で警告する
             'hook_disabled' => (!defined('HOOK_ENABLE') || !HOOK_ENABLE) ? '1' : '',
+            // 同梱ライブラリが欠落していると登録も認証もできないため画面で警告する
+            'vendor_missing' => !class_exists('lbuchs\\WebAuthn\\WebAuthn') ? '1' : '',
         ]);
 
         return $tpl->get();

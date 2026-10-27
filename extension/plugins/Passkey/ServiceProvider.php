@@ -49,14 +49,44 @@ class ServiceProvider extends ACMS_App
     ];
 
     /**
+     * 同梱 vendor のオートローダーを読み込む。
+     *
+     * require_once で直接読むと、アップロード漏れなどで欠けていた場合に
+     * サイト全体が致命的エラーで停止してしまうため、存在を確認してから読む。
+     *
+     * @return bool 読み込めたかどうか
+     */
+    protected function loadVendorAutoload(): bool
+    {
+        $autoload = dirname(__FILE__) . '/vendor/autoload.php';
+        if (!is_readable($autoload)) {
+            if (class_exists('AcmsLogger')) {
+                \AcmsLogger::error(
+                    'Passkey プラグインの vendor/autoload.php が見つからないため、機能を無効化しました。'
+                    . 'アップロード時に vendor ディレクトリが欠落している可能性があります。',
+                    ['path' => $autoload]
+                );
+            }
+            return false;
+        }
+        require_once $autoload;
+        return class_exists('lbuchs\\WebAuthn\\WebAuthn');
+    }
+
+    /**
      * サービスの初期処理
      */
     public function init()
     {
-        require_once dirname(__FILE__) . '/vendor/autoload.php';
+        // vendor/autoload.php が欠けていても require_once でサイト全体を落とさない。
+        // アップロード漏れなどで欠落した場合は、パスキー機能だけを無効化して
+        // 管理画面に原因を表示する（$vendorMissing）。
+        $vendorMissing = !$this->loadVendorAutoload();
 
-        // 管理ログイン (/login/) のレスポンスにパスキーボタンを差し込む Hook
-        HookFactory::singleton()->attach('PasskeyHook', new Hook());
+        if (!$vendorMissing) {
+            // 管理ログイン (/login/) のレスポンスにパスキーボタンを差し込む Hook
+            HookFactory::singleton()->attach('PasskeyHook', new Hook());
+        }
 
         // 管理画面：
         //   /admin/app_passkey_index/     → 全ユーザーのパスキー台帳（管理者専用）
