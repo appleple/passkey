@@ -104,6 +104,10 @@ class Hook
             // テーマカスタマイズ等で設置済み
             return;
         }
+        if (!Compat::isPasskeyAllowedForUser(intval(UID))) {
+            // 読者など、パスキーを利用できない権限のユーザーには出さない
+            return;
+        }
 
         // アンカー：２段階認証の設定リンク → 無ければパスワード確認の入力欄
         $pos = false;
@@ -150,6 +154,12 @@ class Hook
         }
         if (empty($_COOKIE[self::PROMPT_PENDING_COOKIE])) {
             // ログイン直後ではない（通常の画面遷移）
+            return;
+        }
+        if (!Compat::isPasskeyAllowedForCurrentUser()) {
+            // 読者などパスキーを使えない権限には案内しない
+            // （3.0 はログインが一本化されており会員もここに到達しうる）
+            $this->clearPromptPendingCookie();
             return;
         }
         // ログイン1回につき判定1回。ここで消費する

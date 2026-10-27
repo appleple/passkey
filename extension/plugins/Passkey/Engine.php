@@ -287,9 +287,8 @@ class Engine
         $errors = [];
         $auth = isset($user['user_auth']) ? (string)$user['user_auth'] : '';
 
-        // 権限チェック（3.0 はログインが一本化され本体も権限で制限しないため null が返る）
-        $allowedAuths = Compat::allowedLoginAuths();
-        if ($allowedAuths !== null && !in_array($auth, $allowedAuths, true)) {
+        // 権限チェック（読者はすべてのバージョンで対象外）
+        if (!in_array($auth, Compat::allowedLoginAuths(), true)) {
             $errors[] = '管理ログインの権限がありません';
         }
 

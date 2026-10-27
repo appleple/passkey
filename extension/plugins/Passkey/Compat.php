@@ -122,24 +122,62 @@ class Compat
     }
 
     /**
-     * ログインを許可する権限の一覧。
+     * パスキーの利用を許可する権限の一覧。
      *
-     * 3.0 はログインが一本化されており本体も権限で制限していないため、
-     * パスキー経路でも制限しない（読者もログインできるのは本体仕様どおり）。
      * 3.1 以降は本体の管理ログイン可能権限に従う。
+     * 3.0 はログインが一本化されており本体が権限で制限していないが、
+     * バージョンによって挙動が変わると分かりにくいため、本プラグインでは
+     * 3.1 以降と同じ権限（読者を除く）に揃える。
      *
-     * @return string[]|null null なら権限による制限なし
+     * @return string[]
      */
-    public static function allowedLoginAuths(): ?array
+    public static function allowedLoginAuths(): array
     {
-        if (self::isLegacy()) {
-            return null;
+        if (!self::isLegacy()) {
+            try {
+                return Login::getAdminLoginAuth();
+            } catch (\Throwable $e) {
+                // 本体に判定が無ければ既定値で代替する
+            }
+        }
+        return ['administrator', 'editor', 'contributor'];
+    }
+
+    /**
+     * ログイン中のユーザーがパスキーを利用できる権限か。
+     *
+     * 画面の表示可否（モーダル・自分のパスキー管理ページ）の判定に使う。
+     * 認証そのものの可否は Engine::checkAdminLoginEligibility() が判定する。
+     *
+     * @return bool
+     */
+    public static function isPasskeyAllowedForCurrentUser(): bool
+    {
+        if (!self::isLoggedIn()) {
+            return false;
+        }
+        return self::isPasskeyAllowedForUser(intval(SUID));
+    }
+
+    /**
+     * 指定ユーザーがパスキーを利用できる権限か。
+     *
+     * @param int $uid
+     * @return bool
+     */
+    public static function isPasskeyAllowedForUser(int $uid): bool
+    {
+        if ($uid < 1 || !class_exists('ACMS_RAM')) {
+            return false;
         }
         try {
-            return Login::getAdminLoginAuth();
+            $auth = (string)\ACMS_RAM::userAuth($uid);
         } catch (\Throwable $e) {
-            return ['administrator', 'editor', 'contributor'];
+            // 権限を判定できない場合は安全側に倒して不許可とする
+            // （ここで例外を通すと画面全体が停止してしまう）
+            return false;
         }
+        return in_array($auth, self::allowedLoginAuths(), true);
     }
 
     /**

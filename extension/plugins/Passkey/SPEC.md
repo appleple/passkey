@@ -44,26 +44,34 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 ### B4. 対象ユーザーの範囲
 
 本プラグインは**管理ログインのみ**を対象とする。フロントのサインイン（会員機能）のパスキー対応は実装していない。
-読者（subscriber）の扱いは本体のログイン構造の違いにより、バージョンで異なる。
 
-| 権限 | Ver. 3.1.x - 3.2.x | Ver. 3.0.x |
-|---|---|---|
-| 管理者 / 編集者 / 投稿者 | ○ | ○ |
-| 読者（subscriber） | × | ○ |
+| 権限 | パスキーの利用 |
+|---|---|
+| 管理者 / 編集者 / 投稿者 | ○ |
+| 読者（subscriber） | × |
 
-**Ver. 3.0.x**：管理ログインと会員サインインが分離されておらず、本体の `ACMS_POST_Login_Auth` も
-権限でログインを制限していない（権限はリダイレクト先の判定にしか使われない）。
-そのため `Compat::allowedLoginAuths()` は null（制限なし）を返し、読者もパスキーを利用できる。
-得られるのはそのユーザー自身の権限のセッションのみで権限昇格は起きず、端末制限も
-`Compat::isAllowedDevice()` がパスワードログインと同じ判定を通すため抜け道にはならない。
+**バージョンによらず読者を除外する。** 3.1 以降は本体が管理ログインを権限で制限しているため自然に除外されるが、
+3.0 は管理ログインと会員サインインが分離されておらず、本体の `ACMS_POST_Login_Auth` は権限で制限していない
+（権限はリダイレクト先の判定にしか使われない）。そのまま追従すると 3.0 だけ読者が使えることになり、
+仕様の説明が複雑になるため、`Compat::allowedLoginAuths()` が 3.0 でも
+administrator / editor / contributor を返して挙動を揃えている。
 
-**Ver. 3.1 以降**で読者が対象外になるのは次の 3 点によるもので、いずれも意図的な設計：
+読者が除外される仕組みは次の 4 点：
 
-1. **ログインボタン**：`Hook::injectLoginButton()` は `IS_SYSTEM_LOGIN_PAGE` でのみ注入するため、フロントのサインイン画面（`SIGNIN_SEGMENT`）には出ない
-2. **認証**：`POST/Passkey/LoginVerify` が `Engine::checkAdminLoginEligibility()` で user_auth / user_blog_id / IP / 端末制限という管理ログイン相当のガードをかける。仮に読者がパスキーを持っていても、認証成功後にここで拒否され監査ログに記録される（権限の抜け道にならない）
-3. **推奨モーダル**：一時 Cookie を立てるのは `ACMS_POST_Member_Admin_Login`（と派生クラス）を検知したときだけ。フロントのサインインは親クラスの `ACMS_POST_Member_Signin` なので `instanceof` が一致せず Cookie が立たない。加えて本体の `Login::getAdminLoginAuth()` が管理ログイン可能な権限を administrator / editor / contributor に限定している
+1. **ログインボタン**：`Hook::injectLoginButton()` は管理ログイン画面でのみ注入するため、フロントのサインイン画面には出ない
+2. **認証**：`POST/Passkey/LoginVerify` が `Engine::checkAdminLoginEligibility()` で user_auth / user_blog_id / IP / 端末制限のガードをかける。仮に読者がパスキーを持っていても、認証成功後にここで拒否され監査ログに記録される
+3. **推奨モーダル**：`Hook::injectRegistrationPrompt()` が `Compat::isPasskeyAllowedForCurrentUser()` で判定し、対象外なら一時 Cookie を消して出さない
+   （3.0 は会員も `ACMS_POST_Login_Auth` を通るため Cookie 自体は立ちうる）
+4. **自分のパスキー管理ページ**：`GET/Passkey/Lists` が同じ判定で空を返す。ユーザー編集画面の「設定する」ボタンも
+   `Compat::isPasskeyAllowedForUser(UID)` で対象ユーザーを見て出し分ける
 
-> **Note**: Ver. 3.1 以降で `signin_page_auth` が `contributor` に設定されている場合、本体仕様により投稿者も管理ログインの対象外になる（`getAdminLoginAuth()` が administrator / editor のみを返す）。この場合は投稿者もパスキーログイン・推奨モーダルの対象外。
+権限を判定できない場合（`ACMS_RAM::userAuth()` が例外を投げる等）は安全側に倒して不許可とする。
+
+なお台帳（`app_passkey_index`）は本体の拡張アプリ管理やユーザー一覧と同じく管理者専用で、
+`sessionWithAdministration()` を満たさなければ `die403()` を返す。
+
+> **Note**: `signin_page_auth` が `contributor` に設定されている場合、本体仕様により投稿者も管理ログインの対象外になる
+> （`getAdminLoginAuth()` が administrator / editor のみを返す）。この場合は投稿者もパスキーを利用できない。
 
 ### C. インストール → 即使える
 - テーマファイルの編集不要

@@ -36,11 +36,10 @@ class AdminLists extends ACMS_GET
 {
     public function get()
     {
-        if (!Compat::isLoggedIn() || !SUID) {
-            return '';
-        }
-        if (!sessionWithAdministration()) {
-            return '';
+        // 本体の拡張アプリ管理やユーザー一覧と同じく管理者専用。
+        // 空を返すだけだと管理画面の枠が表示されてしまうため 403 を返す
+        if (!Compat::isLoggedIn() || !SUID || !sessionWithAdministration()) {
+            die403();
         }
 
         $tpl = new Template($this->tpl, new ACMS_Corrector());

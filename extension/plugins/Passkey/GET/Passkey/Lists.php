@@ -33,6 +33,10 @@ class Lists extends ACMS_GET
         if (!Compat::isLoggedIn() || !SUID) {
             return '';
         }
+        if (!Compat::isPasskeyAllowedForCurrentUser()) {
+            // 読者はパスキーを利用できないため管理ページも出さない
+            return '';
+        }
 
         $tpl = new Template($this->tpl, new ACMS_Corrector());
 
