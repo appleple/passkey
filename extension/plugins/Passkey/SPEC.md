@@ -73,6 +73,16 @@ administrator / editor / contributor を返して挙動を揃えている。
 > **Note**: `signin_page_auth` が `contributor` に設定されている場合、本体仕様により投稿者も管理ログインの対象外になる
 > （`getAdminLoginAuth()` が administrator / editor のみを返す）。この場合は投稿者もパスキーを利用できない。
 
+### B5. ブログ単位の有効化
+
+拡張アプリの有効化状態は `acms_app` に `app_blog_id` 単位で保存され、
+インストール・有効化・無効化はいずれも現在の BID に対して行われる
+（`ACMS_POST_App_Install` / `Activate` / `Deactivate`）。
+
+そのため子ブログのログインページでパスキーを使うには、**その子ブログでも有効化が必要**。
+有効でないブログでは ServiceProvider の `init()` が走らず、Hook が登録されないため
+ログイン画面にボタンが出ない。
+
 ### C. インストール → 即使える
 - テーマファイルの編集不要
 - `private/config.system.yaml` への追記不要
