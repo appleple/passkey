@@ -23,6 +23,14 @@ a-blog cms の **管理画面ログインをパスキー（WebAuthn）ででき�
 
 ## インストール
 
+### ダウンロード
+
+**[最新版の zip をダウンロード](https://github.com/appleple/passkey/releases/latest)**
+
+過去のバージョンは[リリース一覧](https://github.com/appleple/passkey/releases)から取得できます。
+
+### 構成
+
 配布 zip を展開すると、次の構成になっています。
 
 ```
