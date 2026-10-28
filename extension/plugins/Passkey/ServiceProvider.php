@@ -14,7 +14,7 @@ class ServiceProvider extends ACMS_App
     /**
      * @var string
      */
-    public $version = '0.12.0';
+    public $version = '1.0.0';
 
     /**
      * @var string
